@@ -1,0 +1,43 @@
+// Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+// Testing
+coverage/
+.nyc_output/
+
+// Environment
+.env
+.env.local
+.env.*.local
+
+// Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+// OS
+.DS_Store
+Thumbs.db
+
+// Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+// Temporary
+tmp/
+temp/
+*.tmp
+
+// Build
+dist/
+build/
+
+// Local config (don't ignore .apirc.json in projects!)
+~/.apirc.json
