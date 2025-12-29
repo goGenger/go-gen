@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/node/v/go-gen.svg)](https://nodejs.org)
 
-一款强大的 TypeScript API 代码生成器，支持从 API 响应或 OpenAPI 文档一键生成 TypeScript 接口代码和类型定义。
+一款 TypeScript API 代码生成器，支持从 API 响应或 OpenAPI 文档一键生成 TypeScript 接口代码和类型定义。
 
 [English](./README.en.md) | 简体中文
 

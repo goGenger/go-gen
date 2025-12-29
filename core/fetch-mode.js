@@ -73,6 +73,12 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
       if (attempt >= maxRetries) {
         throw lastError;
       }
+
+      // 重试前等待
+      if (attempt < maxRetries) {
+        console.log(chalk.yellow(`⚠️  请求失败 (尝试 ${attempt}/${maxRetries}),2秒后重试...`));
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     } finally {
       // ========= 清理资源 =========
       if (timeoutId) {
@@ -92,7 +98,7 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   throw lastError;
 }
 
-/** 创建 AbortError（兼容测试） */
+/** 创建 AbortError(兼容测试) */
 function createAbortError() {
   const err = new Error("Aborted");
   err.name = "AbortError";
@@ -100,26 +106,36 @@ function createAbortError() {
 }
 
 /**
- * 监听用户输入,允许按 Ctrl+C 或输入 'cancel' 取消请求
+ * 监听用户输入,允许按 Ctrl+C 取消请求
+ * 🔥 关键修复: 使用 once + 立即清理机制
  */
 function setupCancelListener(spinner) {
   console.log(chalk.gray("\n💡 提示: 请求过程中可以按 Ctrl+C 取消\n"));
 
-  // 监听 Ctrl+C
+  let isHandled = false; // 防止重复处理
+
+  // Ctrl+C 处理器
   const abortHandler = () => {
-    if (globalAbortController) {
-      spinner.fail(chalk.yellow("⚠️  用户取消了请求"));
+    if (isHandled) return; // 已处理过，直接返回
+    
+    if (globalAbortController && !globalAbortController.signal.aborted) {
+      isHandled = true;
+      // spinner.fail(chalk.yellow("⚠️  用户取消了请求"));
       globalAbortController.abort();
-      globalAbortController = null;
+      
+      // 🔥 关键: 立即移除监听器，避免影响后续 prompts
+      cleanup();
     }
   };
 
   process.on("SIGINT", abortHandler);
 
   // 返回清理函数
-  return () => {
+  const cleanup = () => {
     process.removeListener("SIGINT", abortHandler);
   };
+  
+  return cleanup;
 }
 
 async function fetchMode() {
@@ -271,6 +287,9 @@ async function fetchMode() {
   // 🆕 设置取消监听器
   const cleanup = setupCancelListener(fetchSpinner);
 
+  // 🔥 标记请求是否被用户取消
+  let userCancelled = false;
+
   try {
     const headers = {
       "Content-Type": "application/json",
@@ -282,6 +301,7 @@ async function fetchMode() {
       method: response.method,
       headers,
       timeout: config.timeout || 10000,
+      signal: globalAbortController.signal, // 🔥 传递 signal
     };
 
     // 如果有请求体数据,添加到请求中
@@ -294,6 +314,10 @@ async function fetchMode() {
       fetchOptions,
       config.maxRetries || 3
     );
+
+    // 🔥 请求成功后立即清理监听器
+    cleanup();
+    globalAbortController = null;
 
     fetchSpinner.succeed("✅ API 数据获取完成");
 
@@ -328,10 +352,18 @@ async function fetchMode() {
 
     return result;
   } catch (error) {
+    // 🔥 捕获错误后立即清理
+    cleanup();
+    globalAbortController = null;
+
     // 区分用户取消和真实错误
-    if (error.message === "用户取消了请求") {
+    if (error.message === "用户取消了请求" || error.name === "AbortError") {
+      userCancelled = true;
       fetchSpinner.fail(chalk.yellow("⚠️  请求已被取消"));
-      console.log(chalk.gray("\n提示: 您可以重新开始或退出"));
+      console.log(chalk.gray("\n提示: 您可以重新开始或退出\n"));
+      
+      // 🔥 用户取消后不再继续执行
+      return null;
     } else {
       fetchSpinner.fail(`❌ 请求失败: ${error.message}`);
 
@@ -349,12 +381,13 @@ async function fetchMode() {
       }
 
       console.log(chalk.red("\n💡 提示: 请检查网络连接和 URL 是否正确"));
+      throw error;
     }
-
-    throw error;
   } finally {
-    // 🆕 清理监听器和 AbortController
-    cleanup();
+    // 🆕 最终清理：确保监听器一定被移除
+    if (cleanup && typeof cleanup === 'function') {
+      cleanup();
+    }
     globalAbortController = null;
   }
 }

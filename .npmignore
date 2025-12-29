@@ -1,0 +1,10 @@
+{
+  "files": [
+    "bin",
+    "core",
+    "utils",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

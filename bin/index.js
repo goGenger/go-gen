@@ -7,8 +7,8 @@ const packageJson = require('../package.json');
 // 导入命令
 const fetchMode = require('../core/fetch-mode');
 const openapiMode = require('../core/openapi-mode');
-const { 
-  initLocalConfig, 
+const {
+  initLocalConfig,
   showConfig,
   configGlobal
 } = require('../core/config');
