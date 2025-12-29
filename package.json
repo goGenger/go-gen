@@ -1,16 +1,13 @@
 {
   "name": "go-gen",
   "version": "1.0.0",
-  "description": "公司内部的Quicktype CLI工具，用于生成类型定义",
+  "description": "一款强大的 TypeScript API 代码生成器，支持从 API 响应或 OpenAPI 文档一键生成 TypeScript 接口代码和类型定义",
   "bin": {
     "go-gen": "./bin/index.js"
   },
   "scripts": {
-    "start": "node bin/index.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "test:unit": "jest test/unit",
-    "test:integration": "jest test/integration",
     "lint": "eslint core/**/*.js"
   },
   "keywords": [
@@ -22,7 +19,8 @@
     "cli"
   ],
   "license": "MIT",
-  "author": "goGener",
+  "author": "goGenger",
+  "email": "bg2582266166@gmail.com",
   "devDependencies": {
     "jest": "^29.6.0",
     "nock": "^13.3.3",
@@ -41,6 +39,6 @@
     "shelljs": "^0.10.0"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   }
 }

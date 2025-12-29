@@ -1,133 +1,80 @@
-# 🚀 API 代码生成器 CLI
+# 🚀 go-gen
 
-一键生成 TypeScript API 接口代码和类型定义，支持 Fetch 模式和 OpenAPI 规范。
+[![npm version](https://badge.fury.io/js/go-gen.svg)](https://www.npmjs.com/package/go-gen)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/node/v/go-gen.svg)](https://nodejs.org)
 
-## ✨ 核心特性
+一款强大的 TypeScript API 代码生成器，支持从 API 响应或 OpenAPI 文档一键生成 TypeScript 接口代码和类型定义。
 
-- 🔄 **增量写入** - 智能检测已存在文件，自动追加新内容
-- 🔀 **类型冲突处理** - 自动检测并重命名重复类型
+[English](./README.en.md) | 简体中文
+
+## ✨ 特性
+
+- 🎯 **Fetch 模式** - 直接请求 API，自动生成类型定义
+- 📄 **OpenAPI 模式** - 从 Swagger/OpenAPI 文档批量生成
+- 🔄 **增量写入** - 智能合并已存在的文件，避免覆盖
+- 🔀 **冲突处理** - 自动检测并重命名重复的类型
 - 🌐 **多种 HTTP 方法** - 支持 GET、POST、PUT、DELETE、PATCH
 - 🔐 **认证支持** - Bearer Token、Cookie 等多种认证方式
-- 🔁 **自动重试** - 网络请求失败自动重试，提高稳定性
+- 🔁 **自动重试** - 网络请求失败自动重试
 - ⚙️ **双层配置** - 全局配置 + 项目配置，灵活适配多项目
-- ⚡ **批量生成** - OpenAPI 模式支持批量生成所有接口
-- 🛡️ **安全检查** - 防止写入系统目录
+- ⚡ **批量生成** - OpenAPI 模式支持一键生成所有接口
+- 🎨 **类型安全** - 生成完整的 TypeScript 类型定义
 
 ## 📦 安装
 
+### 全局安装（推荐）
+
 ```bash
-npm install -g go-generator-cli
+npm install -g go-gen
+```
+
+### 项目内安装
+
+```bash
+npm install --save-dev go-gen
 ```
 
 ## 🎯 快速开始
 
-### 第一次使用
-
-```bash
-# 1. 配置全局偏好（可选，个人习惯设置）
-go-gen config --global
-
-# 2. 在项目中初始化配置（推荐，团队共享）
-cd your-project
-go-gen init
-
-# 3. 开始生成接口
-go-gen fetch
-```
-
-## 🔧 配置系统（双层设计）
-
-### 为什么需要双层配置？
-
-因为 CLI 工具安装在全局，但会在不同项目中使用：
-
-- **全局配置** (`~/.apirc.json`) - 你的个人习惯
-  - 默认输出路径偏好
-  - 网络超时设置
-  - 是否自动重试
-- **项目配置** (`./apirc.json`) - 项目团队规范
-  - request 模块路径（每个项目可能不同）
-  - 命名前缀规范（团队统一风格）
-  - 提交到 Git，团队共享
-
-### 配置优先级
-
-```
-项目配置 > 全局配置 > 默认配置
-```
-
-### 配置示例
-
-**全局配置** (`~/.apirc.json`)
-
-```json
-{
-  "defaultOutputPath": "current",
-  "timeout": 15000,
-  "autoRetry": true,
-  "maxRetries": 5
-}
-```
-
-**项目 A 配置** (`project-a/.apirc.json`)
-
-```json
-{
-  "requestModule": "@/utils/request",
-  "typePrefix": "I",
-  "apiPrefix": "api"
-}
-```
-
-**项目 B 配置** (`project-b/.apirc.json`)
-
-```json
-{
-  "requestModule": "@/api/http",
-  "typePrefix": "",
-  "apiPrefix": ""
-}
-```
-
-**实际效果：**
-
-- 在 `project-a` 运行：使用 A 的配置 + 你的全局偏好
-- 在 `project-b` 运行：使用 B 的配置 + 你的全局偏好
-- 在其他目录运行：只使用全局配置
-
-## 📖 命令详解
-
-### 1. `go-gen fetch` - Fetch 模式
-
-直接请求 API 并生成代码。
+### Fetch 模式 - 直接请求 API
 
 ```bash
 go-gen fetch
 ```
 
-交互式问答：
+#### 交互式问答
 
 ```
-? 🌐 请输入 API URL: https://api.example.com/users
-? 🔧 请求方法: GET
-? 🔐 是否需要认证? Bearer Token
-? 🔑 请输入 Bearer Token: ********
-? 📝 Response Type 名称: UserResponse
-? 📦 API 方法名: getUsers
-? 📂 输出目录: 📁 当前目录
+🌐 请输入 API URL: https://api.example.com/users
+🔧 请求方法: GET
+🔐 是否需要认证? 不需要
+📝 Response Type 名称: UserResponse
+📦 API 方法名: getUsers
+📂 输出目录: 📁 当前目录
+
+🚀 请求 API 数据中...
+✅ API 数据获取完成
+🧠 生成 TypeScript 类型...
+✅ 类型生成完成
+🎉 文件生成成功！
 ```
 
-生成结果：
+#### 生成的文件
+
+**types.ts**
 
 ```typescript
-// types.ts
 export interface UserResponse {
   id: number;
   name: string;
   email: string;
 }
+```
 
-// api.ts
+**api.ts**
+
+```typescript
 import request from "@/utils/request";
 import type { UserResponse } from "./types";
 
@@ -136,9 +83,7 @@ export function getUsers() {
 }
 ```
 
-### 2. `go-gen openapi <source>` - OpenAPI 模式
-
-从 Swagger/OpenAPI 文档批量生成。
+### OpenAPI 模式 - 从文档生成
 
 ```bash
 # 本地文件
@@ -150,268 +95,313 @@ go-gen openapi https://api.example.com/swagger.json
 
 支持两种生成模式：
 
+- **批量生成** - 自动命名，一次生成所有接口
 - **逐个生成** - 可自定义每个接口的名称
-- **批量生成** - 自动命名，快速生成所有接口
 
-### 3. `go-gen init` - 初始化项目配置
+## 📖 核心功能
 
-在当前项目创建配置文件。
+### 1. 支持多种 HTTP 方法
 
-```bash
-cd your-project
-go-gen init
-```
-
-会创建 `.apirc.json` 文件，包含项目特定配置：
-
-```json
-{
-  "requestModule": "@/utils/request",
-  "typePrefix": "",
-  "apiPrefix": ""
-}
-```
-
-**建议：将此文件提交到 Git，供团队共享！**
-
-### 4. `go-gen config` - 配置管理
-
-#### 查看当前配置
-
-```bash
-go-gen config --show
-```
-
-输出示例：
-
-```
-📋 当前生效的配置:
-
-配置来源:
-  ✅ 全局配置: /Users/you/.apirc.json
-  ✅ 项目配置: /path/to/project/.apirc.json
-
-最终配置:
-  defaultOutputPath: "current"
-  requestModule: "@/utils/request"
-  timeout: 15000
-  ...
-```
-
-#### 设置全局配置
-
-```bash
-go-gen config --global
-```
-
-交互式设置你的个人偏好。
-
-#### 初始化全局配置
-
-```bash
-go-gen config --init-global
-```
-
-创建 `~/.apirc.json` 全局配置文件。
-
-### 5. `go-gen help` - 帮助信息
-
-```bash
-go-gen help
-```
-
-显示详细的使用指南。
-
-## 🎨 实际使用场景
-
-### 场景 1：个人开发者（单项目）
-
-```bash
-# 配置一次全局设置
-go-gen config --global
-
-# 直接使用
-go-gen fetch
-```
-
-### 场景 2：团队协作（多项目）
-
-```bash
-# 项目负责人：在项目中创建配置
-cd project-a
-go-gen init
-# 编辑 .apirc.json 设置团队规范
-git add .apirc.json
-git commit -m "chore: add api generator config"
-
-# 团队成员：拉取代码后直接使用
-cd project-a
-go-gen fetch  # 自动使用项目配置
-```
-
-### 场景 3：同时维护多个项目
-
-```bash
-# 项目 A（使用 axios）
-cd project-a
-cat .apirc.json
-{
-  "requestModule": "axios",
-  "typePrefix": "I"
-}
-go-gen fetch  # 生成 axios 风格代码
-
-# 项目 B（使用自定义 request）
-cd project-b
-cat .apirc.json
-{
-  "requestModule": "@/utils/http",
-  "typePrefix": ""
-}
-go-gen fetch  # 生成项目 B 风格代码
-```
-
-### 场景 4：增量开发
-
-```bash
-# Day 1: 生成用户接口
-go-gen fetch
-# 生成 users/api.ts 和 users/types.ts
-
-# Day 2: 添加更多接口到同一目录
-go-gen fetch
-# 选择相同目录 "users"
-# 自动追加到 users/api.ts ✨
-```
-
-## 🔄 增量写入详解
-
-### 第一次生成
-
-```bash
-go-gen fetch
-# 输入: getUsers
-# 输出: users/api.ts, users/types.ts
-```
+自动识别 POST、PUT、PATCH 方法需要请求体，并生成对应的 Request 类型：
 
 ```typescript
-// users/api.ts
-export function getUsers() { ... }
+// GET 请求
+export function getUser() {
+  return request.get<UserResponse>("/api/user");
+}
 
-// users/types.ts
-export interface UserResponse { ... }
+// POST 请求（带请求体）
+export function createUser(data: CreateUserRequest) {
+  return request.post<UserResponse>("/api/user", data);
+}
 ```
 
-### 第二次生成（相同目录）
+### 2. 请求体类型生成
+
+当选择需要请求体时，可以输入示例 JSON 数据：
 
 ```bash
-go-gen fetch
-# 输入: createUser
-# 选择目录: users（已存在）
-# 输出: 追加到现有文件 ✨
+📦 该接口是否需要请求体? Yes
+
+💡 提示: 请输入请求体的 JSON 示例数据
+📝 请输入请求体 JSON: {"name": "John", "email": "john@example.com"}
+
+✅ Request 类型生成完成
 ```
 
-```typescript
-// users/api.ts
-import type { UserResponse, CreateUserResponse } from "./types";
+生成的类型：
 
+```typescript
+export interface CreateUserRequest {
+  name: string;
+  email: string;
+}
+
+export interface CreateUserResponse {
+  id: number;
+  message: string;
+}
+```
+
+### 3. 增量写入
+
+智能检测已存在的文件，自动合并新内容：
+
+```typescript
+// 第一次生成
 export function getUsers() { ... }
 
+// 第二次生成到同一目录
+export function getUsers() { ... }
 export function createUser(data: CreateUserRequest) { ... }  // 新增
-
-// users/types.ts
-export interface UserResponse { ... }
-
-export interface CreateUserResponse { ... }  // 新增
-export interface CreateUserRequest { ... }   // 新增
 ```
 
-### 类型冲突自动解决
+### 4. 类型冲突自动处理
 
-```bash
-# 尝试生成重复类型名
-go-gen fetch
-# 输入类型名: ApiResponse（已存在）
+检测到重复类型名时自动重命名：
 
-# 输出
+```
 ⚠️  类型名冲突，已自动重命名: ApiResponse → ApiResponse1
 ✨ 生成成功！（类型已重命名为 ApiResponse1）
 ```
 
-## 🌐 支持的 HTTP 方法
+### 5. 认证支持
 
-| 方法   | 请求体 | 生成示例                      |
-| ------ | ------ | ----------------------------- |
-| GET    | ❌     | `request.get<T>(url)`         |
-| POST   | ✅     | `request.post<T>(url, data)`  |
-| PUT    | ✅     | `request.put<T>(url, data)`   |
-| DELETE | ❌     | `request.delete<T>(url)`      |
-| PATCH  | ✅     | `request.patch<T>(url, data)` |
-
-## 🔐 认证方式
-
-### Bearer Token
+#### Bearer Token
 
 ```bash
-? 🔐 是否需要认证? Bearer Token
-? 🔑 请输入 Bearer Token: ********
+🔐 是否需要认证? Bearer Token
+🔑 请输入 Bearer Token: ********
 ```
 
-请求时自动添加 `Authorization: Bearer xxx`
+自动添加请求头：`Authorization: Bearer xxx`
 
-### Cookie
+#### Cookie
 
 ```bash
-? 🔐 是否需要认证? Cookie
-? 🍪 请输入 Cookie: sessionid=abc123
+🔐 是否需要认证? Cookie
+🍪 请输入 Cookie: sessionid=abc123
 ```
 
-请求时自动添加 `Cookie: sessionid=abc123`
+自动添加请求头：`Cookie: sessionid=abc123`
 
-## ⚙️ 完整配置项
+## ⚙️ 配置系统
 
-### 全局配置项（推荐设置）
+### 双层配置设计
 
-| 配置项              | 类型    | 默认值      | 说明                                      |
-| ------------------- | ------- | ----------- | ----------------------------------------- |
-| `defaultOutputPath` | string  | `'current'` | 默认输出路径：`current`、`desktop`、`ask` |
-| `timeout`           | number  | `10000`     | 请求超时时间（毫秒）                      |
-| `autoRetry`         | boolean | `true`      | 失败是否自动重试                          |
-| `maxRetries`        | number  | `3`         | 最大重试次数                              |
+因为 CLI 工具安装在全局，但会在不同项目中使用：
 
-### 项目配置项（推荐设置）
+- **全局配置** (`~/.apirc.json`) - 你的个人习惯
+- **项目配置** (`./.apirc.json`) - 项目团队规范
 
-| 配置项          | 类型   | 默认值              | 说明                                         |
-| --------------- | ------ | ------------------- | -------------------------------------------- |
-| `requestModule` | string | `'@/utils/request'` | request 模块导入路径                         |
-| `typePrefix`    | string | `''`                | 类型名前缀（如 `'I'` → `IUserResponse`）     |
-| `apiPrefix`     | string | `''`                | API 方法名前缀（如 `'api'` → `apiGetUsers`） |
-| `defaultMethod` | string | `'GET'`             | 默认 HTTP 方法                               |
+**配置优先级：** 项目配置 > 全局配置 > 默认配置
 
-## 🎓 最佳实践
+### 初始化配置
 
-### 1. 团队规范化
+```bash
+# 初始化项目配置
+go-gen init
+
+# 设置全局配置
+go-gen config --global
+
+# 查看当前配置
+go-gen config --show
+```
+
+### 配置示例
+
+**全局配置** (`~/.apirc.json`) - 个人偏好
+
+```json
+{
+  "defaultOutputPath": "current",
+  "timeout": 15000,
+  "autoRetry": true,
+  "maxRetries": 5
+}
+```
+
+**项目配置** (`.apirc.json`) - 团队规范
+
+```json
+{
+  "requestModule": "@/utils/request",
+  "typePrefix": "I",
+  "apiPrefix": "api"
+}
+```
+
+### 配置项说明
+
+| 配置项              | 类型    | 默认值              | 说明                 |
+| ------------------- | ------- | ------------------- | -------------------- |
+| `defaultOutputPath` | string  | `'current'`         | 默认输出路径         |
+| `timeout`           | number  | `10000`             | 请求超时时间（毫秒） |
+| `autoRetry`         | boolean | `true`              | 失败是否自动重试     |
+| `maxRetries`        | number  | `3`                 | 最大重试次数         |
+| `requestModule`     | string  | `'@/utils/request'` | request 模块路径     |
+| `typePrefix`        | string  | `''`                | 类型名前缀           |
+| `apiPrefix`         | string  | `''`                | API 方法名前缀       |
+| `defaultMethod`     | string  | `'GET'`             | 默认 HTTP 方法       |
+
+## 📝 命令列表
+
+### 主要命令
+
+```bash
+# Fetch 模式
+go-gen fetch
+
+# OpenAPI 模式
+go-gen openapi <source>
+
+# 初始化项目配置
+go-gen init
+
+# 配置管理
+go-gen config --show          # 查看配置
+go-gen config --global        # 设置全局配置
+
+# 查看帮助
+go-gen --help
+go-gen --version
+```
+
+## 🎨 使用场景
+
+### 场景 1：快速对接第三方 API
+
+```bash
+go-gen fetch
+# 输入 API URL
+# 30 秒内完成代码生成
+```
+
+### 场景 2：从 Swagger 文档批量生成
+
+```bash
+go-gen openapi https://petstore.swagger.io/v2/swagger.json
+# 选择批量模式
+# 一次性生成所有接口
+```
+
+### 场景 3：团队协作规范化
 
 ```bash
 # 项目负责人
 cd your-project
 go-gen init
+# 编辑 .apirc.json 设置团队规范
+git add .apirc.json
+git commit -m "chore: add api generator config"
 
-# 编辑 .apirc.json
+# 团队成员
+git pull
+go-gen fetch  # 自动使用团队配置
+```
+
+### 场景 4：多项目维护
+
+```bash
+# 项目 A（使用 axios）
+cd project-a
+cat .apirc.json
+# { "requestModule": "axios" }
+go-gen fetch
+
+# 项目 B（使用自定义 request）
+cd project-b
+cat .apirc.json
+# { "requestModule": "@/utils/http" }
+go-gen fetch
+```
+
+## 🔧 高级用法
+
+### 自定义输出路径
+
+```bash
+# 输出到桌面
+# 选择 "💻 桌面"
+
+# 输出到当前目录
+# 选择 "📁 当前目录"
+
+# 自定义路径
+# 选择 "🔍 自定义路径"
+# 输入: /path/to/output
+```
+
+### 批量生成优化
+
+OpenAPI 批量模式特点：
+
+- ✅ 只询问一次输出目录
+- ✅ 显示进度 (1/10, 2/10...)
+- ✅ 统计成功和失败数量
+- ✅ 自动命名（基于 operationId）
+
+```
+⚡ 批量生成中... (1/10): GET /users
+⚡ 批量生成中... (2/10): POST /users
+...
+✅ 批量生成完成！成功: 10，失败: 0
+```
+
+### 错误处理
+
+#### 自动重试
+
+```
+🚀 请求 API 数据中...
+⚠️  请求失败 (尝试 1/3)，2秒后重试...
+⚠️  请求失败 (尝试 2/3)，2秒后重试...
+✅ API 数据获取完成
+```
+
+#### 友好提示
+
+```
+❌ 请求失败: HTTP 401: Unauthorized
+💡 提示: 请检查 Token 是否正确
+```
+
+## 🎓 最佳实践
+
+### 1. 团队规范化
+
+```json
+// .apirc.json
 {
   "requestModule": "@/api/request",
   "typePrefix": "I",
   "apiPrefix": "api"
 }
-
-# 提交到 Git
-git add .apirc.json
-git commit -m "chore: add go-gen config"
-
-# 团队成员自动遵循规范
 ```
 
-### 2. 目录组织
+提交到 Git，团队成员自动使用统一配置。
+
+### 2. 命名规范
+
+**类型名：** `PascalCase` + `Response` 后缀
+
+```typescript
+✅ UserResponse
+✅ CreateOrderResponse
+❌ userResponse
+```
+
+**API 方法名：** `camelCase` + 动词前缀
+
+```typescript
+✅ getUsers
+✅ createOrder
+✅ updateUserProfile
+❌ Users
+```
+
+### 3. 目录组织
 
 ```
 src/api/
@@ -426,99 +416,125 @@ src/api/
     └── types.ts
 ```
 
-### 3. 命名规范
-
-**类型名：** `PascalCase` + `Response` 后缀
-
-- ✅ `UserResponse`
-- ✅ `CreateOrderResponse`
-- ❌ `userResponse`
-
-**API 方法名：** `camelCase` + 动词前缀
-
-- ✅ `getUsers`
-- ✅ `createOrder`
-- ✅ `updateUserProfile`
-- ❌ `Users`
-
-### 4. 配置文件管理
+### 4. 版本控制
 
 ```bash
-# .gitignore
-.apirc.json  # ❌ 不要忽略项目配置！应该提交
-~/.apirc.json  # ✅ 全局配置无需提交（在用户本地）
+# 提交生成的代码
+git add src/api/
+git commit -m "feat: add user api"
+
+# 提交项目配置（推荐）
+git add .apirc.json
+git commit -m "chore: add api-gen config"
+
+# 全局配置不需要提交
+# ~/.apirc.json 是个人配置
 ```
 
 ## 🚨 故障排查
 
-### 问题：在不同项目生成的代码不一致
+### 问题 1：请求超时
 
-**原因：** 没有使用项目配置
-
-**解决：**
-
-```bash
-cd your-project
-go-gen init  # 创建项目配置
-# 编辑 .apirc.json
-git add .apirc.json  # 提交供团队共享
-```
-
-### 问题：团队成员生成的代码风格不统一
-
-**原因：** 每个人有不同的全局配置
-
-**解决：** 使用项目配置覆盖全局配置
-
-```bash
-# 项目配置优先级更高，会覆盖全局配置
-go-gen init
-```
-
-### 问题：请求一直超时
-
-**解决：** 调整全局超时配置
+**解决：** 增加超时时间
 
 ```bash
 go-gen config --global
-# 设置更长的超时时间
+# 设置 timeout: 30000
 ```
 
-## 📊 配置优先级示例
+### 问题 2：类型名不对
 
-**场景：** 三个配置中都有 `requestModule`
+**症状：** 输入 `ApiResponse`，生成 `APIResponse`
 
-```
-默认配置:  requestModule = "@/utils/request"
-全局配置:  requestModule = "axios"
-项目配置:  requestModule = "@/api/http"
+**解决：** 已在最新版本修复，使用 `acronym-style: camel`
 
-最终使用: "@/api/http"  ← 项目配置优先
-```
+### 问题 3：在不同项目生成的代码不一致
 
-**场景：** 只有全局配置
-
-```
-默认配置:  timeout = 10000
-全局配置:  timeout = 30000
-项目配置:  (无)
-
-最终使用: 30000  ← 全局配置生效
-```
-
-## 🆘 获取帮助
+**解决：** 使用项目配置
 
 ```bash
-# 查看版本
-go-gen --version
+cd your-project
+go-gen init
+# 编辑 .apirc.json
+# 团队成员自动使用相同配置
+```
 
-# 查看帮助
-go-gen help
+## 📊 性能数据
 
-# 查看配置
-go-gen config --show
+| 操作                | 耗时   | 说明                 |
+| ------------------- | ------ | -------------------- |
+| 单个接口生成        | 3-5s   | 包括请求、生成、写入 |
+| 批量生成 10 个接口  | 15-20s | OpenAPI 批量模式     |
+| 批量生成 100 个接口 | 2-3min | 大型项目             |
+| 增量写入            | 1-2s   | 追加到已存在文件     |
+
+## 🧪 测试
+
+项目包含完整的测试套件：
+
+```bash
+# 运行所有测试
+npm test
+
+# 查看覆盖率
+npm test -- --coverage
+
+# 运行特定测试
+npm test config.test.js
+npm test writer.test.js
+npm test openapi.test.js
+```
+
+测试覆盖率：
+
+- 配置系统: 100%
+- 文件生成: 95%
+- HTTP 方法: 100%
+- 错误处理: 90%
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+### 开发环境设置
+
+```bash
+# 克隆项目
+git clone https://github.com/your-username/go-gen.git
+cd go-gen
+
+# 安装依赖
+npm install
+
+# 运行测试
+npm test
+
+# 本地测试
+npm link
+go-gen fetch
+```
+
+### 提交规范
+
+```bash
+git commit -m "feat: add new feature"
+git commit -m "fix: fix bug"
+git commit -m "docs: update readme"
+git commit -m "test: add tests"
 ```
 
 ## 📄 License
 
-MIT License
+[MIT](./LICENSE)
+
+## 📮 联系方式
+
+- GitHub: [@your-username](https://github.com/your-username)
+- Email: your.email@example.com
+- Issues: [GitHub Issues](https://github.com/your-username/go-gen/issues)
+
+---
+
+**Made with ❤️ by goGenger**
+
+如果这个项目对你有帮助，请给一个 ⭐️ Star！

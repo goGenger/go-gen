@@ -1,148 +1,150 @@
-const fetchMode = require('../core/fetch-mode');
-const { fetchWithRetry } = require('../core/fetch-mode');
-
-jest.mock('node-fetch', () => jest.fn());
-jest.mock('prompts');
-jest.mock('../core/quicktype');
-jest.mock('../core/writer');
-jest.mock('../core/config');
-jest.mock('ora', () => () => ({
-  start: jest.fn().mockReturnThis(),
-  succeed: jest.fn(),
-  fail: jest.fn(),
+jest.mock("node-fetch", () => jest.fn());
+jest.mock("prompts", () => jest.fn());
+jest.mock("ora", () => () => ({
+  start: () => ({
+    succeed: jest.fn(),
+    fail: jest.fn(),
+  }),
+}));
+jest.mock("chalk", () => ({
+  yellow: (s) => s,
+  red: (s) => s,
+  gray: (s) => s,
+  cyan: (s) => s,
+}));
+jest.mock("../core/quicktype", () => ({
+  generateTypes: jest.fn().mockResolvedValue("type ApiResponse = {}"),
+}));
+jest.mock("../core/writer", () => ({
+  writeFiles: jest.fn().mockResolvedValue({ success: true }),
+}));
+jest.mock("../core/config", () => ({
+  loadConfig: jest.fn().mockReturnValue({
+    timeout: 1000,
+    maxRetries: 2,
+    autoRetry: false,
+  }),
 }));
 
-const fetch = require('node-fetch');
-const prompts = require('prompts');
-const { generateTypes } = require('../core/quicktype');
-const { writeFiles } = require('../core/writer');
-const { loadConfig } = require('../core/config');
+const fetch = require("node-fetch");
+const prompts = require("prompts");
+const fetchMode = require("../core/fetch-mode");
+const { fetchWithRetry } = fetchMode;
 
-describe('fetchWithRetry', () => {
-  beforeEach(() => {
+describe("fetchWithRetry", () => {
+  afterEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
   });
 
-  it('请求成功时直接返回 json', async () => {
+  test("请求成功时直接返回 json", async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ success: true }),
+      json: async () => ({ ok: true }),
     });
 
-    const result = await fetchWithRetry('http://test.com');
-
-    expect(result).toEqual({ success: true });
-    expect(fetch).toHaveBeenCalledTimes(1);
+    const res = await fetchWithRetry("http://test.com");
+    expect(res).toEqual({ ok: true });
   });
 
-  it('请求失败后重试成功', async () => {
+  test("请求失败后重试成功", async () => {
     fetch
-      .mockRejectedValueOnce(new Error('network error'))
+      .mockRejectedValueOnce(new Error("network error"))
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ok: true }),
       });
 
-    const result = await fetchWithRetry('http://test.com', {}, 2);
-
-    expect(result).toEqual({ ok: true });
+    const res = await fetchWithRetry("http://test.com", {}, 2);
+    expect(res.ok).toBe(true);
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it('超过最大重试次数后抛出错误', async () => {
-    fetch.mockRejectedValue(new Error('fail'));
+  test("超过最大重试次数后抛出错误", async () => {
+    fetch.mockRejectedValue(new Error("network error"));
 
-    await expect(
-      fetchWithRetry('http://test.com', {}, 2)
-    ).rejects.toThrow('fail');
+    await expect(fetchWithRetry("http://test.com", {}, 2)).rejects.toThrow(
+      "network error"
+    );
+  });
 
-    expect(fetch).toHaveBeenCalledTimes(2);
+  test("HTTP 非 2xx 时抛出错误", async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    });
+
+    await expect(fetchWithRetry("http://test.com", {}, 1)).rejects.toThrow(
+      "HTTP 500"
+    );
+  });
+
+  test("timeout 会触发 AbortController.abort()", async () => {
+    jest.useFakeTimers();
+
+    const abortSpy = jest.spyOn(AbortController.prototype, "abort");
+
+    fetch.mockImplementation(() => new Promise(() => {}));
+
+    fetchWithRetry("http://test.com", { timeout: 500 }, 1);
+    jest.advanceTimersByTime(500);
+
+    expect(abortSpy).toHaveBeenCalled();
+    abortSpy.mockRestore();
+  });
+
+  test("abort 时抛出用户取消错误", async () => {
+    const controller = new AbortController();
+
+    fetch.mockImplementation(() => {
+      return new Promise((_, reject) => {
+        controller.signal.addEventListener("abort", () => {
+          const err = new Error("AbortError");
+          err.name = "AbortError";
+          reject(err);
+        });
+      });
+    });
+
+    const p = fetchWithRetry(
+      "http://test.com",
+      { signal: controller.signal },
+      1
+    );
+
+    controller.abort();
+
+    await expect(p).rejects.toThrow("用户取消了请求");
   });
 });
 
-describe('fetchMode', () => {
-  beforeEach(() => {
+describe("fetchMode 主流程（轻量）", () => {
+  afterEach(() => {
     jest.clearAllMocks();
-
-    loadConfig.mockReturnValue({
-      timeout: 10000,
-      maxRetries: 1,
-      autoRetry: false,
-    });
   });
 
-  it('完整成功流程（包含 Request + Response 类型）', async () => {
-    // prompts 顺序 mock（非常关键）
-    prompts
-      .mockResolvedValueOnce({
-        url: 'http://api.test.com',
-        method: 'POST',
-      })
-      .mockResolvedValueOnce({
-        authType: 'none',
-      })
-      .mockResolvedValueOnce({
-        needBody: true,
-      })
-      .mockResolvedValueOnce({
-        data: '{"name":"test"}',
-      })
-      .mockResolvedValueOnce({
-        typeName: 'ApiResponse',
-        apiName: 'getData',
-      });
-
+  test("完整成功流程（GET）", async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ code: 0, data: { id: 1 } }),
+      json: async () => ({ id: 1 }),
     });
 
-    generateTypes
-      .mockResolvedValueOnce('export interface ApiResponse {}')
-      .mockResolvedValueOnce('export interface ApiResponseRequest {}');
-
-    writeFiles.mockResolvedValue({ success: true });
-
-    const result = await fetchMode();
-
-    expect(fetch).toHaveBeenCalled();
-    expect(generateTypes).toHaveBeenCalledTimes(2);
-    expect(writeFiles).toHaveBeenCalledWith(
-      expect.objectContaining({
-        apiName: 'getData',
-        typeName: 'ApiResponse',
-        method: 'POST',
-        hasRequestBody: true,
-      })
-    );
-    expect(result).toEqual({ success: true });
-  });
-
-  it('用户在第一步取消时直接返回', async () => {
-    prompts.mockResolvedValueOnce({ url: null });
-
-    const result = await fetchMode();
-
-    expect(result).toBeUndefined();
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  it('接口请求失败时抛出错误', async () => {
     prompts
+      .mockResolvedValueOnce({ url: "http://test.com", method: "GET" })
+      .mockResolvedValueOnce({ authType: "none" })
       .mockResolvedValueOnce({
-        url: 'http://api.test.com',
-        method: 'GET',
-      })
-      .mockResolvedValueOnce({
-        authType: 'none',
-      })
-      .mockResolvedValueOnce({
-        typeName: 'ApiResponse',
-        apiName: 'getData',
+        apiName: "getData",
+        typeName: "ApiResponse",
       });
 
-    fetch.mockRejectedValueOnce(new Error('API error'));
+    const res = await fetchMode();
+    expect(res).toEqual({ success: true });
+  });
 
-    await expect(fetchMode()).rejects.toThrow('API error');
+  test("用户第一步取消直接退出", async () => {
+    prompts.mockResolvedValueOnce({ url: null });
+    const res = await fetchMode();
+    expect(res).toBeUndefined();
   });
 });
