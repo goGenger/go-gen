@@ -1,0 +1,21 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 文档
+    url: https://github.com/goGenger/go-gen/blob/main/README.md
+    about: 查看我们的完整文档
+
+  - name: 💬 讨论区
+    url: https://github.com/goGenger/go-gen/discussions
+    about: 在社区中提问和讨论
+
+  - name: 📖 故障排查指南
+    url: https://github.com/goGenger/go-gen/blob/main/docs/TROUBLESHOOTING.md
+    about: 常见问题和解决方案
+
+  - name: 🎓 最佳实践
+    url: https://github.com/goGenger/go-gen/blob/main/docs/BEST_PRACTICES.md
+    about: 学习使用 go-gen 的最佳实践
+
+  - name: 📧 邮件支持
+    url: mailto:bg2582266166@gmail.com
+    about: 直接联系维护者
