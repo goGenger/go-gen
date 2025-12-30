@@ -29,7 +29,7 @@ describe('OpenAPI Mode', () => {
   beforeEach(() => {
     // 保存原始工作目录
     originalCwd = process.cwd();
-    
+
     // 创建临时目录
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openapi-test-'));
     process.chdir(tempDir);
@@ -43,45 +43,7 @@ describe('OpenAPI Mode', () => {
           get: {
             operationId: 'getUsers',
             responses: {
-              '200': {
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        id: { type: 'number' },
-                        name: { type: 'string' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          post: {
-            operationId: 'createUser',
-            responses: {
-              '200': {
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        id: { type: 'number' },
-                        message: { type: 'string' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        '/users/{id}': {
-          get: {
-            operationId: 'getUserById',
-            responses: {
-              '200': {
+              200: {
                 content: {
                   'application/json': {
                     schema: {
@@ -89,23 +51,61 @@ describe('OpenAPI Mode', () => {
                       properties: {
                         id: { type: 'number' },
                         name: { type: 'string' },
-                        email: { type: 'string' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          post: {
+            operationId: 'createUser',
+            responses: {
+              200: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'number' },
+                        message: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '/users/{id}': {
+          get: {
+            operationId: 'getUserById',
+            responses: {
+              200: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'number' },
+                        name: { type: 'string' },
+                        email: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     };
 
     // Mock loadOpenAPI
     loadOpenAPI.mockResolvedValue(mockOpenAPIDoc);
 
     // Mock schemaToSample
-    schemaToSample.mockImplementation((schema) => {
+    schemaToSample.mockImplementation(schema => {
       if (schema.properties) {
         const sample = {};
         Object.keys(schema.properties).forEach(key => {
@@ -119,8 +119,9 @@ describe('OpenAPI Mode', () => {
     });
 
     // Mock pascalCase
-    pascalCase.mockImplementation((str) => {
-      return str.replace(/[^a-zA-Z0-9]+/g, ' ')
+    pascalCase.mockImplementation(str => {
+      return str
+        .replace(/[^a-zA-Z0-9]+/g, ' ')
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join('');
@@ -133,7 +134,7 @@ describe('OpenAPI Mode', () => {
   afterEach(() => {
     // 恢复工作目录
     process.chdir(originalCwd);
-    
+
     // 清理临时目录
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -167,14 +168,14 @@ describe('OpenAPI Mode', () => {
       await openapiMode('./invalid.json');
 
       expect(exitSpy).toHaveBeenCalledWith(1);
-      
+
       exitSpy.mockRestore();
     });
 
     test('should handle OpenAPI with no endpoints', async () => {
       loadOpenAPI.mockResolvedValueOnce({
         openapi: '3.0.0',
-        paths: {}
+        paths: {},
       });
 
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -188,7 +189,7 @@ describe('OpenAPI Mode', () => {
   describe('Batch mode', () => {
     test('should generate all APIs in batch mode with desktop output', async () => {
       const desktopPath = path.join(os.homedir(), 'Desktop');
-      
+
       // Mock prompts 响应
       prompts
         .mockResolvedValueOnce({ generateMode: 'batch' })
@@ -198,18 +199,24 @@ describe('OpenAPI Mode', () => {
 
       // 验证调用次数
       expect(prompts).toHaveBeenCalledTimes(2);
-      
+
       // 验证第一次调用（选择模式）
-      expect(prompts).toHaveBeenNthCalledWith(1, expect.objectContaining({
-        name: 'generateMode',
-        message: expect.stringContaining('3 个接口')
-      }));
+      expect(prompts).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          name: 'generateMode',
+          message: expect.stringContaining('3 个接口'),
+        }),
+      );
 
       // 验证第二次调用（选择输出目录）
-      expect(prompts).toHaveBeenNthCalledWith(2, expect.objectContaining({
-        name: 'outputPath',
-        message: expect.stringContaining('输出目录')
-      }));
+      expect(prompts).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          name: 'outputPath',
+          message: expect.stringContaining('输出目录'),
+        }),
+      );
     });
 
     test('should generate all APIs in batch mode with current directory', async () => {
@@ -252,8 +259,10 @@ describe('OpenAPI Mode', () => {
 
       await openapiMode('./test.json');
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('操作已取消'));
-      
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('操作已取消'),
+      );
+
       consoleSpy.mockRestore();
     });
 
@@ -264,7 +273,8 @@ describe('OpenAPI Mode', () => {
 
       // Mock generateTypes to throw error for one API
       let callCount = 0;
-      jest.spyOn(require('../core/quicktype'), 'generateTypes')
+      jest
+        .spyOn(require('../core/quicktype'), 'generateTypes')
         .mockImplementation(() => {
           callCount++;
           if (callCount === 2) {
@@ -278,9 +288,7 @@ describe('OpenAPI Mode', () => {
       await openapiMode('./test.json');
 
       // 应该显示成功和失败的统计
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('成功')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('成功'));
 
       consoleSpy.mockRestore();
     });
@@ -346,7 +354,8 @@ describe('OpenAPI Mode', () => {
         .mockResolvedValueOnce({ continueGen: false }); // 遇到错误后不继续
 
       // Mock generateTypes to throw error
-      jest.spyOn(require('../core/quicktype'), 'generateTypes')
+      jest
+        .spyOn(require('../core/quicktype'), 'generateTypes')
         .mockRejectedValueOnce(new Error('Type generation failed'));
 
       await openapiMode('./test.json');
@@ -365,7 +374,8 @@ describe('OpenAPI Mode', () => {
 
       // Mock generateTypes to throw error on first call
       let callCount = 0;
-      jest.spyOn(require('../core/quicktype'), 'generateTypes')
+      jest
+        .spyOn(require('../core/quicktype'), 'generateTypes')
         .mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
@@ -378,7 +388,7 @@ describe('OpenAPI Mode', () => {
 
       // 应该继续处理第二个接口
       expect(prompts).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'continueGen' })
+        expect.objectContaining({ name: 'continueGen' }),
       );
     });
   });
@@ -390,14 +400,15 @@ describe('OpenAPI Mode', () => {
         .mockResolvedValueOnce({ outputPath: tempDir });
 
       // 使用真实的 generateTypes
-      jest.spyOn(require('../core/quicktype'), 'generateTypes')
+      jest
+        .spyOn(require('../core/quicktype'), 'generateTypes')
         .mockResolvedValue('export interface TestResponse { id: number; }');
 
       await openapiMode('./test.json');
 
       // 验证文件是否创建
       const apiDir = path.join(tempDir, 'getUsers');
-      
+
       if (fs.existsSync(apiDir)) {
         const apiFile = path.join(apiDir, 'api.ts');
         const typesFile = path.join(apiDir, 'types.ts');
@@ -416,13 +427,14 @@ describe('OpenAPI Mode', () => {
         .mockResolvedValueOnce({ generateMode: 'batch' })
         .mockResolvedValueOnce({ outputPath: tempDir });
 
-      jest.spyOn(require('../core/quicktype'), 'generateTypes')
+      jest
+        .spyOn(require('../core/quicktype'), 'generateTypes')
         .mockResolvedValue('export interface TestResponse { id: number; }');
 
       await openapiMode('./test.json');
 
       const apiDir = path.join(tempDir, 'createUser');
-      
+
       if (fs.existsSync(apiDir)) {
         const apiFile = path.join(apiDir, 'api.ts');
         const apiContent = fs.readFileSync(apiFile, 'utf-8');
@@ -438,14 +450,15 @@ describe('OpenAPI Mode', () => {
         .mockResolvedValueOnce({ generateMode: 'batch' })
         .mockResolvedValueOnce({ outputPath: tempDir });
 
-      jest.spyOn(require('../core/quicktype'), 'generateTypes')
+      jest
+        .spyOn(require('../core/quicktype'), 'generateTypes')
         .mockResolvedValue('export interface TestResponse {}');
 
       await openapiMode('./test.json');
 
       // 验证使用了 operationId（getUsers）而不是自动生成的名称
       const apiDir = path.join(tempDir, 'getUsers');
-      
+
       if (fs.existsSync(apiDir)) {
         expect(fs.existsSync(apiDir)).toBe(true);
       }
@@ -460,13 +473,13 @@ describe('OpenAPI Mode', () => {
           '/test': {
             get: {
               responses: {
-                '404': {
-                  description: 'Not found'
-                }
-              }
-            }
-          }
-        }
+                404: {
+                  description: 'Not found',
+                },
+              },
+            },
+          },
+        },
       });
 
       prompts.mockResolvedValueOnce({ generateMode: null });
@@ -484,17 +497,17 @@ describe('OpenAPI Mode', () => {
           '/test': {
             get: {
               responses: {
-                '200': {
+                200: {
                   content: {
                     'text/plain': {
-                      schema: { type: 'string' }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                      schema: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       prompts.mockResolvedValueOnce({ generateMode: null });
@@ -508,7 +521,7 @@ describe('OpenAPI Mode', () => {
     test('should handle OpenAPI with empty paths', async () => {
       loadOpenAPI.mockResolvedValueOnce({
         openapi: '3.0.0',
-        paths: null
+        paths: null,
       });
 
       await openapiMode('./test.json');
@@ -524,36 +537,35 @@ describe('OpenAPI Mode', () => {
           get: {
             operationId: `getEndpoint${i}`,
             responses: {
-              '200': {
+              200: {
                 content: {
                   'application/json': {
                     schema: {
                       type: 'object',
-                      properties: { id: { type: 'number' } }
-                    }
-                  }
-                }
-              }
-            }
-          }
+                      properties: { id: { type: 'number' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
         };
       }
 
       loadOpenAPI.mockResolvedValueOnce({
         openapi: '3.0.0',
-        paths: largePaths
+        paths: largePaths,
       });
 
-      prompts
-        .mockResolvedValueOnce({ generateMode: null });
+      prompts.mockResolvedValueOnce({ generateMode: null });
 
       await openapiMode('./test.json');
 
       // 应该检测到 100 个接口
       expect(prompts).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('100 个接口')
-        })
+          message: expect.stringContaining('100 个接口'),
+        }),
       );
     });
   });
@@ -589,7 +601,7 @@ describe('OpenAPI Mode Integration', () => {
           get: {
             operationId: 'getUsers',
             responses: {
-              '200': {
+              200: {
                 content: {
                   'application/json': {
                     schema: {
@@ -599,17 +611,17 @@ describe('OpenAPI Mode Integration', () => {
                         properties: {
                           id: { type: 'integer' },
                           name: { type: 'string' },
-                          email: { type: 'string' }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          email: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     };
 
     const openapiFile = path.join(tempDir, 'openapi.json');

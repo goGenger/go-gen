@@ -2,10 +2,10 @@ const {
   quicktype,
   InputData,
   jsonInputForTargetLanguage,
-} = require("quicktype-core");
+} = require('quicktype-core');
 
 async function generateTypes(jsonData, typeName) {
-  const jsonInput = jsonInputForTargetLanguage("typescript");
+  const jsonInput = jsonInputForTargetLanguage('typescript');
   await jsonInput.addSource({
     name: typeName,
     samples: [JSON.stringify(jsonData)],
@@ -16,16 +16,16 @@ async function generateTypes(jsonData, typeName) {
 
   const result = await quicktype({
     inputData,
-    lang: "typescript",
+    lang: 'typescript',
     rendererOptions: {
-      "just-types": "true",
-      "acronym-style": "camel",
-      "prefer-unions": "true",
-      "explicit-unions": "true",
+      'just-types': 'true',
+      'acronym-style': 'camel',
+      'prefer-unions': 'true',
+      'explicit-unions': 'true',
     },
   });
 
-  return result.lines.join("\n");
+  return result.lines.join('\n');
 }
 
 module.exports = { generateTypes };

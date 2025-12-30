@@ -1,25 +1,31 @@
-const path = require("path");
-const shell = require("shelljs");
-const chalk = require("chalk");
-const inquirer = require("inquirer");
-const os = require("os");
-const ora = require("ora");
-const fs = require("fs");
-const { loadConfig } = require("./config");
+const path = require('path');
+const shell = require('shelljs');
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const os = require('os');
+const ora = require('ora');
+const fs = require('fs');
+const { loadConfig } = require('./config');
 
-const desktopPath = path.join(os.homedir(), "Desktop");
+const desktopPath = path.join(os.homedir(), 'Desktop');
 const currentPath = process.cwd();
 
-function generateApiFile({ apiName, typeName, url, method = 'GET', hasRequestBody = false }) {
+function generateApiFile({
+  apiName,
+  typeName,
+  url,
+  method = 'GET',
+  hasRequestBody = false,
+}) {
   const config = loadConfig();
   const requestModule = config.requestModule;
   const finalTypeName = typeName.charAt(0).toUpperCase() + typeName.slice(1);
   const methodLower = method.toLowerCase();
-  
+
   let imports = `import type { ${finalTypeName}`;
   let params = '';
   let requestCall = '';
-  
+
   if (hasRequestBody) {
     imports += `, ${finalTypeName}Request`;
     params = `data: ${finalTypeName}Request`;
@@ -27,7 +33,7 @@ function generateApiFile({ apiName, typeName, url, method = 'GET', hasRequestBod
   } else {
     requestCall = `request.${methodLower}<${finalTypeName}>("${url}")`;
   }
-  
+
   imports += ` } from "./types";`;
 
   return `
@@ -42,14 +48,14 @@ export function ${apiName}(${params}) {
 
 function parseExistingTypes(typesFilePath) {
   if (!fs.existsSync(typesFilePath)) {
-    return { types: [], content: "" };
+    return { types: [], content: '' };
   }
 
-  const content = fs.readFileSync(typesFilePath, "utf-8");
+  const content = fs.readFileSync(typesFilePath, 'utf-8');
   const typeRegex = /export\s+(?:interface|type)\s+(\w+)/g;
   const types = [];
   let match;
-  
+
   while ((match = typeRegex.exec(content)) !== null) {
     types.push(match[1]);
   }
@@ -59,14 +65,14 @@ function parseExistingTypes(typesFilePath) {
 
 function parseExistingApis(apiFilePath) {
   if (!fs.existsSync(apiFilePath)) {
-    return { functions: [], content: "" };
+    return { functions: [], content: '' };
   }
 
-  const content = fs.readFileSync(apiFilePath, "utf-8");
+  const content = fs.readFileSync(apiFilePath, 'utf-8');
   const funcRegex = /export\s+function\s+(\w+)\s*\(/g;
   const functions = [];
   let match;
-  
+
   while ((match = funcRegex.exec(content)) !== null) {
     functions.push(match[1]);
   }
@@ -75,7 +81,7 @@ function parseExistingApis(apiFilePath) {
 }
 
 function extractTypeDefinitions(newTypesContent) {
-  const lines = newTypesContent.split("\n");
+  const lines = newTypesContent.split('\n');
   const definitions = [];
   let currentDef = [];
   let inDefinition = false;
@@ -85,10 +91,11 @@ function extractTypeDefinitions(newTypesContent) {
     if (/export\s+(?:interface|type)\s+\w+/.test(line)) {
       inDefinition = true;
       currentDef = [line];
-      braceCount = (line.match(/{/g) || []).length - (line.match(/}/g) || []).length;
-      
-      if (braceCount === 0 && line.includes("=")) {
-        definitions.push(currentDef.join("\n"));
+      braceCount =
+        (line.match(/{/g) || []).length - (line.match(/}/g) || []).length;
+
+      if (braceCount === 0 && line.includes('=')) {
+        definitions.push(currentDef.join('\n'));
         inDefinition = false;
         currentDef = [];
       }
@@ -101,7 +108,7 @@ function extractTypeDefinitions(newTypesContent) {
       braceCount -= (line.match(/}/g) || []).length;
 
       if (braceCount === 0) {
-        definitions.push(currentDef.join("\n"));
+        definitions.push(currentDef.join('\n'));
         inDefinition = false;
         currentDef = [];
       }
@@ -114,12 +121,12 @@ function extractTypeDefinitions(newTypesContent) {
 function resolveTypeNameConflict(existingTypes, typeName) {
   let finalTypeName = typeName;
   let suffix = 1;
-  
+
   while (existingTypes.includes(finalTypeName)) {
     finalTypeName = `${typeName}${suffix}`;
     suffix++;
   }
-  
+
   return { finalTypeName, hasConflict: finalTypeName !== typeName };
 }
 
@@ -127,22 +134,25 @@ function mergeTypesContent(existingContent, newTypesContent, typeName) {
   const typeRegex = /export\s+(?:interface|type)\s+(\w+)/g;
   const existingTypes = [];
   let match;
-  
+
   while ((match = typeRegex.exec(existingContent)) !== null) {
     existingTypes.push(match[1]);
   }
 
-  const { finalTypeName, hasConflict } = resolveTypeNameConflict(existingTypes, typeName);
-  
+  const { finalTypeName, hasConflict } = resolveTypeNameConflict(
+    existingTypes,
+    typeName,
+  );
+
   if (hasConflict) {
     newTypesContent = newTypesContent.replace(
       new RegExp(`\\b${typeName}\\b`, 'g'),
-      finalTypeName
+      finalTypeName,
     );
   }
 
   const newDefinitions = extractTypeDefinitions(newTypesContent);
-  
+
   const uniqueDefinitions = newDefinitions.filter(def => {
     const typeMatch = def.match(/export\s+(?:interface|type)\s+(\w+)/);
     if (!typeMatch) return false;
@@ -154,17 +164,18 @@ function mergeTypesContent(existingContent, newTypesContent, typeName) {
   }
 
   // 确保有换行分隔
-  const merged = existingContent.trim() + "\n\n" + uniqueDefinitions.join("\n\n");
-  
+  const merged =
+    existingContent.trim() + '\n\n' + uniqueDefinitions.join('\n\n');
+
   return { merged, isDuplicate: false, finalTypeName, hasConflict };
 }
 
 function extractImportedTypes(apiContent) {
   const importMatch = apiContent.match(/import\s+type\s+{\s*([^}]+)\s*}/);
   if (!importMatch) return [];
-  
+
   return importMatch[1]
-    .split(",")
+    .split(',')
     .map(t => t.trim())
     .filter(Boolean);
 }
@@ -173,7 +184,7 @@ function mergeApiContent(existingContent, newApiContent, newApiName) {
   const funcRegex = /export\s+function\s+(\w+)\s*\(/g;
   const existingFunctions = [];
   let match;
-  
+
   while ((match = funcRegex.exec(existingContent)) !== null) {
     existingFunctions.push(match[1]);
   }
@@ -183,26 +194,34 @@ function mergeApiContent(existingContent, newApiContent, newApiName) {
   }
 
   const newTypes = extractImportedTypes(newApiContent);
-  
-  const existingImportMatch = existingContent.match(/import\s+type\s+{\s*([^}]+)\s*}/);
-  const existingTypes = existingImportMatch 
-    ? existingImportMatch[1].split(",").map(t => t.trim()).filter(Boolean)
+
+  const existingImportMatch = existingContent.match(
+    /import\s+type\s+{\s*([^}]+)\s*}/,
+  );
+  const existingTypes = existingImportMatch
+    ? existingImportMatch[1]
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean)
     : [];
 
   const allTypes = [...new Set([...existingTypes, ...newTypes])];
 
   const newFunctionMatch = newApiContent.match(/(export\s+function[\s\S]+)/);
-  const newFunction = newFunctionMatch ? newFunctionMatch[1] : "";
+  const newFunction = newFunctionMatch ? newFunctionMatch[1] : '';
 
   let merged = existingContent;
 
   if (allTypes.length > existingTypes.length) {
-    const importStatement = `import type { ${allTypes.join(", ")} } from "./types";`;
-    merged = merged.replace(/import\s+type\s+{[^}]+}\s+from\s+"\.\/types";/, importStatement);
+    const importStatement = `import type { ${allTypes.join(', ')} } from "./types";`;
+    merged = merged.replace(
+      /import\s+type\s+{[^}]+}\s+from\s+"\.\/types";/,
+      importStatement,
+    );
   }
 
   if (newFunction) {
-    merged = merged.trim() + "\n\n" + newFunction;
+    merged = merged.trim() + '\n\n' + newFunction;
   }
 
   return { merged, isDuplicate: false };
@@ -210,62 +229,74 @@ function mergeApiContent(existingContent, newApiContent, newApiName) {
 
 function validatePath(inputPath) {
   const resolved = path.resolve(inputPath);
-  
+
   // Windows 系统路径（C:\Windows, C:\Program Files 等）
-  const windowsDangerousPaths = ['C:\\Windows', 'C:\\Program Files', 'C:\\System'];
-  
+  const windowsDangerousPaths = [
+    'C:\\Windows',
+    'C:\\Program Files',
+    'C:\\System',
+  ];
+
   // Unix/Linux 系统路径
   const unixDangerousPaths = ['/System', '/usr', '/bin', '/sbin', '/etc'];
-  
+
   // 检查 Windows 路径
   for (const dangerousPath of windowsDangerousPaths) {
     if (resolved.toUpperCase().startsWith(dangerousPath.toUpperCase())) {
       throw new Error('⛔ 不允许写入系统目录');
     }
   }
-  
+
   // 检查 Unix 路径
   for (const dangerousPath of unixDangerousPaths) {
     if (resolved.startsWith(dangerousPath)) {
       throw new Error('⛔ 不允许写入系统目录');
     }
   }
-  
+
   return resolved;
 }
 
-async function writeFiles({ apiName, typeName, url, typesContent, method = 'GET', hasRequestBody = false, interactive = true }) {
+async function writeFiles({
+  apiName,
+  typeName,
+  url,
+  typesContent,
+  method = 'GET',
+  hasRequestBody = false,
+  interactive = true,
+}) {
   const config = loadConfig();
-  
+
   let baseDir;
-  
+
   if (interactive) {
     const { outputPath } = await inquirer.prompt([
       {
-        type: "list",
-        name: "outputPath",
-        message: "📂 输出目录：",
+        type: 'list',
+        name: 'outputPath',
+        message: '📂 输出目录：',
         default: config.defaultOutputPath,
         choices: [
-          { name: "💻 桌面", value: desktopPath },
-          { name: "📁 当前目录", value: currentPath },
-          { name: "🔍 自定义路径", value: "custom" },
+          { name: '💻 桌面', value: desktopPath },
+          { name: '📁 当前目录', value: currentPath },
+          { name: '🔍 自定义路径', value: 'custom' },
         ],
       },
     ]);
 
     baseDir = outputPath;
-    if (outputPath === "custom") {
+    if (outputPath === 'custom') {
       const { customPath } = await inquirer.prompt([
         {
-          type: "input",
-          name: "customPath",
-          message: "📁 请输入保存路径：",
+          type: 'input',
+          name: 'customPath',
+          message: '📁 请输入保存路径：',
           default: config.customPath || currentPath,
-          validate: (input) => {
+          validate: input => {
             try {
               validatePath(input);
-              return shell.test("-d", input) || "路径不存在";
+              return shell.test('-d', input) || '路径不存在';
             } catch (error) {
               return error.message;
             }
@@ -280,15 +311,15 @@ async function writeFiles({ apiName, typeName, url, typesContent, method = 'GET'
 
   const outputDir = path.join(baseDir, apiName);
   const dirExists = fs.existsSync(outputDir);
-  
+
   if (dirExists && interactive) {
     console.log(chalk.yellow(`\n📁 目录已存在，将进行增量写入: ${outputDir}`));
   }
-  
-  shell.mkdir("-p", outputDir);
 
-  const typesFilePath = path.join(outputDir, "types.ts");
-  const apiFilePath = path.join(outputDir, "api.ts");
+  shell.mkdir('-p', outputDir);
+
+  const typesFilePath = path.join(outputDir, 'types.ts');
+  const apiFilePath = path.join(outputDir, 'api.ts');
 
   let finalTypesContent = typesContent;
   let finalTypeName = typeName;
@@ -296,45 +327,57 @@ async function writeFiles({ apiName, typeName, url, typesContent, method = 'GET'
   let typeConflict = false;
 
   if (fs.existsSync(typesFilePath)) {
-    const existingTypes = fs.readFileSync(typesFilePath, "utf-8");
-    const { merged, isDuplicate, finalTypeName: resolvedName, hasConflict } = 
-      mergeTypesContent(existingTypes, typesContent, typeName);
-    
+    const existingTypes = fs.readFileSync(typesFilePath, 'utf-8');
+    const {
+      merged,
+      isDuplicate,
+      finalTypeName: resolvedName,
+      hasConflict,
+    } = mergeTypesContent(existingTypes, typesContent, typeName);
+
     if (hasConflict && interactive) {
-      console.log(chalk.yellow(`⚠️  类型名冲突，已自动重命名: ${typeName} → ${resolvedName}`));
+      console.log(
+        chalk.yellow(
+          `⚠️  类型名冲突，已自动重命名: ${typeName} → ${resolvedName}`,
+        ),
+      );
       typeConflict = true;
       finalTypeName = resolvedName;
     }
-    
+
     if (isDuplicate && !hasConflict && interactive) {
       console.log(chalk.yellow(`⚠️  类型 ${typeName} 已存在，跳过写入`));
       typeSkipped = true;
     }
-    
+
     finalTypesContent = merged;
   }
 
   fs.writeFileSync(typesFilePath, finalTypesContent);
 
-  const newApiContent = generateApiFile({ 
-    apiName, 
-    typeName: finalTypeName, 
-    url, 
+  const newApiContent = generateApiFile({
+    apiName,
+    typeName: finalTypeName,
+    url,
     method,
-    hasRequestBody 
+    hasRequestBody,
   });
   let finalApiContent = newApiContent;
   let apiSkipped = false;
 
   if (fs.existsSync(apiFilePath)) {
-    const existingApi = fs.readFileSync(apiFilePath, "utf-8");
-    const { merged, isDuplicate } = mergeApiContent(existingApi, newApiContent, apiName);
-    
+    const existingApi = fs.readFileSync(apiFilePath, 'utf-8');
+    const { merged, isDuplicate } = mergeApiContent(
+      existingApi,
+      newApiContent,
+      apiName,
+    );
+
     if (isDuplicate && interactive) {
       console.log(chalk.yellow(`⚠️  API 函数 ${apiName} 已存在，跳过写入`));
       apiSkipped = true;
     }
-    
+
     finalApiContent = merged;
   }
 
@@ -342,19 +385,19 @@ async function writeFiles({ apiName, typeName, url, typesContent, method = 'GET'
 
   if (interactive) {
     const spinner = ora();
-    spinner.text = chalk.cyan("📂 输出目录：") + outputDir;
-    
+    spinner.text = chalk.cyan('📂 输出目录：') + outputDir;
+
     if (typeSkipped && apiSkipped) {
-      spinner.warn("⚠️  内容已存在，无新增内容");
+      spinner.warn('⚠️  内容已存在，无新增内容');
     } else if (typeConflict) {
       spinner.succeed(`✨ 生成成功！（类型已重命名为 ${finalTypeName}）`);
     } else if (dirExists) {
-      spinner.succeed("✨ 增量写入成功！");
+      spinner.succeed('✨ 增量写入成功！');
     } else {
-      spinner.succeed("🎉 文件生成成功！");
+      spinner.succeed('🎉 文件生成成功！');
     }
   }
-  
+
   return { success: true, outputDir, finalTypeName };
 }
 

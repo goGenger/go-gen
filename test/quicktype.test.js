@@ -5,11 +5,11 @@ describe('Quicktype Module', () => {
     const mockData = {
       id: 1,
       name: 'Test User',
-      email: 'test@example.com'
+      email: 'test@example.com',
     };
 
     const result = await generateTypes(mockData, 'UserResponse');
-    
+
     expect(result).toContain('export interface UserResponse');
     expect(result).toContain('id');
     expect(result).toContain('name');
@@ -21,23 +21,23 @@ describe('Quicktype Module', () => {
       user: {
         id: 1,
         profile: {
-          name: 'Test'
-        }
-      }
+          name: 'Test',
+        },
+      },
     };
 
     const result = await generateTypes(mockData, 'NestedResponse');
-    
+
     expect(result).toContain('export interface NestedResponse');
   });
 
   test('should handle arrays', async () => {
     const mockData = {
-      items: [1, 2, 3]
+      items: [1, 2, 3],
     };
 
     const result = await generateTypes(mockData, 'ArrayResponse');
-    
+
     expect(result).toContain('export interface ArrayResponse');
     expect(result).toContain('items');
   });

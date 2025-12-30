@@ -1,7 +1,7 @@
-const { 
-  generateApiFile, 
-  resolveTypeNameConflict, 
-  validatePath 
+const {
+  generateApiFile,
+  resolveTypeNameConflict,
+  validatePath,
 } = require('../core/writer');
 
 describe('Writer Module', () => {
@@ -12,9 +12,9 @@ describe('Writer Module', () => {
         typeName: 'UserResponse',
         url: '/api/users',
         method: 'GET',
-        hasRequestBody: false
+        hasRequestBody: false,
       });
-      
+
       expect(result).toContain('export function getUsers()');
       expect(result).toContain('request.get<UserResponse>("/api/users")');
       expect(result).not.toContain('data:');
@@ -26,11 +26,15 @@ describe('Writer Module', () => {
         typeName: 'UserResponse',
         url: '/api/users',
         method: 'POST',
-        hasRequestBody: true
+        hasRequestBody: true,
       });
-      
-      expect(result).toContain('export function createUser(data: UserResponseRequest)');
-      expect(result).toContain('request.post<UserResponse>("/api/users", data)');
+
+      expect(result).toContain(
+        'export function createUser(data: UserResponseRequest)',
+      );
+      expect(result).toContain(
+        'request.post<UserResponse>("/api/users", data)',
+      );
     });
 
     test('should generate PUT request', () => {
@@ -39,9 +43,9 @@ describe('Writer Module', () => {
         typeName: 'UserResponse',
         url: '/api/users/1',
         method: 'PUT',
-        hasRequestBody: true
+        hasRequestBody: true,
       });
-      
+
       expect(result).toContain('request.put<UserResponse>');
     });
 
@@ -51,9 +55,9 @@ describe('Writer Module', () => {
         typeName: 'UserResponse',
         url: '/api/users/1',
         method: 'DELETE',
-        hasRequestBody: false
+        hasRequestBody: false,
       });
-      
+
       expect(result).toContain('request.delete<UserResponse>');
     });
 
@@ -63,9 +67,9 @@ describe('Writer Module', () => {
         typeName: 'UserResponse',
         url: '/api/users/1',
         method: 'PATCH',
-        hasRequestBody: true
+        hasRequestBody: true,
       });
-      
+
       expect(result).toContain('request.patch<UserResponse>');
     });
   });
@@ -73,8 +77,8 @@ describe('Writer Module', () => {
   describe('resolveTypeNameConflict', () => {
     test('should not modify name if no conflict', () => {
       const { finalTypeName, hasConflict } = resolveTypeNameConflict(
-        ['User', 'Order'], 
-        'Product'
+        ['User', 'Order'],
+        'Product',
       );
       expect(finalTypeName).toBe('Product');
       expect(hasConflict).toBe(false);
@@ -82,8 +86,8 @@ describe('Writer Module', () => {
 
     test('should add suffix if conflict exists', () => {
       const { finalTypeName, hasConflict } = resolveTypeNameConflict(
-        ['User', 'Order'], 
-        'User'
+        ['User', 'Order'],
+        'User',
       );
       expect(finalTypeName).toBe('User1');
       expect(hasConflict).toBe(true);
@@ -91,8 +95,8 @@ describe('Writer Module', () => {
 
     test('should increment suffix for multiple conflicts', () => {
       const { finalTypeName } = resolveTypeNameConflict(
-        ['User', 'User1', 'User2'], 
-        'User'
+        ['User', 'User1', 'User2'],
+        'User',
       );
       expect(finalTypeName).toBe('User3');
     });
@@ -107,9 +111,13 @@ describe('Writer Module', () => {
 
     test('should reject system paths', () => {
       if (process.platform === 'win32') {
-        expect(() => validatePath('C:\\Windows\\test')).toThrow('不允许写入系统目录');
+        expect(() => validatePath('C:\\Windows\\test')).toThrow(
+          '不允许写入系统目录',
+        );
       } else {
-        expect(() => validatePath('/System/test')).toThrow('不允许写入系统目录');
+        expect(() => validatePath('/System/test')).toThrow(
+          '不允许写入系统目录',
+        );
         expect(() => validatePath('/usr/local')).toThrow('不允许写入系统目录');
         expect(() => validatePath('/bin')).toThrow('不允许写入系统目录');
       }

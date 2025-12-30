@@ -1,30 +1,30 @@
-const ora = require("ora");
-const prompts = require("prompts");
-const chalk = require("chalk");
-const path = require("path");
-const fs = require("fs");
-const os = require("os");
-const loadOpenAPI = require("../utils/load-openapi");
-const { schemaToSample } = require("../utils/sampler");
-const quicktype = require("./quicktype");
+const ora = require('ora');
+const prompts = require('prompts');
+const chalk = require('chalk');
+const path = require('path');
+const fs = require('fs');
+const os = require('os');
+const loadOpenAPI = require('../utils/load-openapi');
+const { schemaToSample } = require('../utils/sampler');
+const quicktype = require('./quicktype');
 
-const { generateApiFile } = require("./writer");
-const { pascalCase } = require("../utils/name");
-const { loadConfig } = require("./config");
+const { generateApiFile } = require('./writer');
+const { pascalCase } = require('../utils/name');
+const { loadConfig } = require('./config');
 
 async function openapiMode(source) {
   const config = loadConfig();
 
   // ===== 阶段 1：读取 OpenAPI =====
-  const loadSpinner = ora("📖 读取 OpenAPI...").start();
+  const loadSpinner = ora('📖 读取 OpenAPI...').start();
 
   let openapi;
   try {
     openapi = await loadOpenAPI(source);
-    loadSpinner.succeed("✅ OpenAPI 读取完成");
+    loadSpinner.succeed('✅ OpenAPI 读取完成');
   } catch (error) {
     loadSpinner.fail(`❌ OpenAPI 读取失败: ${error.message}`);
-    console.log(chalk.red("💡 请检查文件路径或 URL 是否正确"));
+    console.log(chalk.red('💡 请检查文件路径或 URL 是否正确'));
     process.exit(1);
   }
 
@@ -34,7 +34,7 @@ async function openapiMode(source) {
   for (const [url, methods] of Object.entries(openapi?.paths || {})) {
     for (const [method, api] of Object.entries(methods || {})) {
       const schema =
-        api.responses?.["200"]?.content?.["application/json"]?.schema;
+        api.responses?.['200']?.content?.['application/json']?.schema;
 
       if (!schema) continue;
 
@@ -43,66 +43,66 @@ async function openapiMode(source) {
   }
 
   if (apis.length === 0) {
-    ora().warn("⚠️  未发现可生成的接口");
+    ora().warn('⚠️  未发现可生成的接口');
     return;
   }
 
   // ===== 阶段 2：选择生成模式 =====
   const { generateMode } = await prompts({
-    type: "select",
-    name: "generateMode",
+    type: 'select',
+    name: 'generateMode',
     message: `🚀 发现 ${apis.length} 个接口，请选择生成模式：`,
     choices: [
-      { title: "📝 逐个生成（可自定义名称）", value: "manual" },
-      { title: "⚡ 批量生成（自动命名）", value: "batch" },
+      { title: '📝 逐个生成（可自定义名称）', value: 'manual' },
+      { title: '⚡ 批量生成（自动命名）', value: 'batch' },
     ],
   });
 
   if (!generateMode) {
-    console.log(chalk.yellow("\n✋ 操作已取消"));
+    console.log(chalk.yellow('\n✋ 操作已取消'));
     return;
   }
 
-  if (generateMode === "batch") {
+  if (generateMode === 'batch') {
     // ===== 批量生成模式 =====
 
     // 🔑 关键：只询问一次输出目录
-    const desktopPath = path.join(os.homedir(), "Desktop");
+    const desktopPath = path.join(os.homedir(), 'Desktop');
     const currentPath = process.cwd();
 
     const outputPathChoice = await prompts({
-      type: "select",
-      name: "outputPath",
-      message: "📂 输出目录（所有接口统一使用）：",
+      type: 'select',
+      name: 'outputPath',
+      message: '📂 输出目录（所有接口统一使用）：',
       choices: [
-        { title: "💻 桌面", value: desktopPath },
-        { title: "📁 当前目录", value: currentPath },
-        { title: "🔍 自定义路径", value: "custom" },
+        { title: '💻 桌面', value: desktopPath },
+        { title: '📁 当前目录', value: currentPath },
+        { title: '🔍 自定义路径', value: 'custom' },
       ],
-      initial: config.defaultOutputPath === "desktop" ? 0 : 1,
+      initial: config.defaultOutputPath === 'desktop' ? 0 : 1,
     });
 
     if (!outputPathChoice.outputPath) {
-      console.log(chalk.yellow("\n✋ 操作已取消"));
+      console.log(chalk.yellow('\n✋ 操作已取消'));
       return;
     }
 
     let baseDir = outputPathChoice.outputPath;
 
-    if (baseDir === "custom") {
+    if (baseDir === 'custom') {
       const customPathResponse = await prompts({
-        type: "text",
-        name: "customPath",
-        message: "📁 请输入保存路径：",
+        type: 'text',
+        name: 'customPath',
+        message: '📁 请输入保存路径：',
         initial: currentPath,
-        validate: (input) => {
+        validate: input => {
           const resolved = path.resolve(input);
-          return fs.existsSync(resolved) || "路径不存在";
+          return fs.existsSync(resolved) || '路径不存在';
         },
       });
 
       if (!customPathResponse.customPath) {
-        console.log(chalk.yellow("\n✋ 操作已取消"));
+        console.log(chalk.yellow('\n✋ 操作已取消'));
         return;
       }
 
@@ -127,19 +127,19 @@ async function openapiMode(source) {
 
         // 2️⃣ 类型名（自动生成）
         const typeName =
-          pascalCase(method) + pascalCase(url.replace(/\//g, "_")) + "Response";
+          pascalCase(method) + pascalCase(url.replace(/\//g, '_')) + 'Response';
 
         // 3️⃣ API 方法名（自动生成）
         const apiName =
           api.operationId ||
-          method.toLowerCase() + pascalCase(url.replace(/\//g, "_"));
+          method.toLowerCase() + pascalCase(url.replace(/\//g, '_'));
 
         // 4️⃣ 生成类型
         const typesContent = await quicktype.generateTypes(sample, typeName);
 
         // 5️⃣ 判断是否需要请求体
-        const hasRequestBody = ["post", "put", "patch"].includes(
-          method.toLowerCase()
+        const hasRequestBody = ['post', 'put', 'patch'].includes(
+          method.toLowerCase(),
         );
 
         // 6️⃣ 写入文件（不再询问输出目录）
@@ -147,7 +147,7 @@ async function openapiMode(source) {
         fs.mkdirSync(outputDir, { recursive: true });
 
         // 写入 types.ts
-        const typesFilePath = path.join(outputDir, "types.ts");
+        const typesFilePath = path.join(outputDir, 'types.ts');
         fs.writeFileSync(typesFilePath, typesContent);
 
         // 写入 api.ts
@@ -159,7 +159,7 @@ async function openapiMode(source) {
           hasRequestBody,
         });
 
-        const apiFilePath = path.join(outputDir, "api.ts");
+        const apiFilePath = path.join(outputDir, 'api.ts');
         fs.writeFileSync(apiFilePath, apiContent);
 
         successCount++;
@@ -167,55 +167,55 @@ async function openapiMode(source) {
         failCount++;
         console.log(
           chalk.yellow(
-            `\n⚠️  跳过 ${method.toUpperCase()} ${url}: ${error.message}`
-          )
+            `\n⚠️  跳过 ${method.toUpperCase()} ${url}: ${error.message}`,
+          ),
         );
       }
     }
 
     batchSpinner.succeed(
-      `✅ 批量生成完成！成功: ${successCount}，失败: ${failCount}`
+      `✅ 批量生成完成！成功: ${successCount}，失败: ${failCount}`,
     );
     console.log(chalk.green(`成功: ${successCount}，失败: ${failCount}`));
     console.log(chalk.cyan(`📂 输出目录: ${baseDir}\n`));
   } else {
     // ===== 逐个生成模式 =====
     const parseSpinner = ora(`🔍 解析接口（共 ${apis.length} 个）...`).start();
-    parseSpinner.succeed("✅ 接口解析完成");
+    parseSpinner.succeed('✅ 接口解析完成');
 
     // 🔑 关键：询问是否对所有接口使用相同的输出目录
     const { useSameDir } = await prompts({
-      type: "confirm",
-      name: "useSameDir",
-      message: "📂 是否对所有接口使用相同的输出目录？",
+      type: 'confirm',
+      name: 'useSameDir',
+      message: '📂 是否对所有接口使用相同的输出目录？',
       initial: true,
     });
 
     let baseDir = null;
 
     if (useSameDir) {
-      const desktopPath = path.join(os.homedir(), "Desktop");
+      const desktopPath = path.join(os.homedir(), 'Desktop');
       const currentPath = process.cwd();
 
       const outputPathChoice = await prompts({
-        type: "select",
-        name: "outputPath",
-        message: "📂 选择输出目录：",
+        type: 'select',
+        name: 'outputPath',
+        message: '📂 选择输出目录：',
         choices: [
-          { title: "💻 桌面", value: desktopPath },
-          { title: "📁 当前目录", value: currentPath },
-          { title: "🔍 自定义路径", value: "custom" },
+          { title: '💻 桌面', value: desktopPath },
+          { title: '📁 当前目录', value: currentPath },
+          { title: '🔍 自定义路径', value: 'custom' },
         ],
         initial: 1,
       });
 
       baseDir = outputPathChoice.outputPath;
 
-      if (baseDir === "custom") {
+      if (baseDir === 'custom') {
         const customPathResponse = await prompts({
-          type: "text",
-          name: "customPath",
-          message: "📁 请输入保存路径：",
+          type: 'text',
+          name: 'customPath',
+          message: '📁 请输入保存路径：',
           initial: currentPath,
         });
 
@@ -227,7 +227,9 @@ async function openapiMode(source) {
       const { url, method, api, schema } = apis[i];
 
       console.log(
-        chalk.cyan(`\n[${i + 1}/${apis.length}] ${method.toUpperCase()} ${url}`)
+        chalk.cyan(
+          `\n[${i + 1}/${apis.length}] ${method.toUpperCase()} ${url}`,
+        ),
       );
 
       try {
@@ -236,22 +238,22 @@ async function openapiMode(source) {
 
         // 2️⃣ 类型名
         const typeName =
-          pascalCase(method) + pascalCase(url.replace(/\//g, "_")) + "Response";
+          pascalCase(method) + pascalCase(url.replace(/\//g, '_')) + 'Response';
 
         // 3️⃣ API 方法名（支持 operationId）
         const defaultApiName =
           api.operationId ||
-          method.toLowerCase() + pascalCase(url.replace(/\//g, "_"));
+          method.toLowerCase() + pascalCase(url.replace(/\//g, '_'));
 
         const { apiName } = await prompts({
-          type: "text",
-          name: "apiName",
+          type: 'text',
+          name: 'apiName',
           message: `📦 API 方法名：`,
           initial: defaultApiName,
         });
 
         if (!apiName) {
-          console.log(chalk.yellow("跳过此接口"));
+          console.log(chalk.yellow('跳过此接口'));
           continue;
         }
 
@@ -259,8 +261,8 @@ async function openapiMode(source) {
         const typesContent = await quicktype.generateTypes(sample, typeName);
 
         // 5️⃣ 判断是否需要请求体
-        const hasRequestBody = ["post", "put", "patch"].includes(
-          method.toLowerCase()
+        const hasRequestBody = ['post', 'put', 'patch'].includes(
+          method.toLowerCase(),
         );
 
         // 6️⃣ 写入文件
@@ -272,12 +274,12 @@ async function openapiMode(source) {
         } else {
           // 每次询问输出目录
           const outputPathChoice = await prompts({
-            type: "select",
-            name: "outputPath",
-            message: "📂 输出目录：",
+            type: 'select',
+            name: 'outputPath',
+            message: '📂 输出目录：',
             choices: [
-              { title: "💻 桌面", value: path.join(os.homedir(), "Desktop") },
-              { title: "📁 当前目录", value: process.cwd() },
+              { title: '💻 桌面', value: path.join(os.homedir(), 'Desktop') },
+              { title: '📁 当前目录', value: process.cwd() },
             ],
             initial: 1,
           });
@@ -288,7 +290,7 @@ async function openapiMode(source) {
         fs.mkdirSync(outputDir, { recursive: true });
 
         // 写入 types.ts
-        const typesFilePath = path.join(outputDir, "types.ts");
+        const typesFilePath = path.join(outputDir, 'types.ts');
         fs.writeFileSync(typesFilePath, typesContent);
 
         // 写入 api.ts
@@ -300,7 +302,7 @@ async function openapiMode(source) {
           hasRequestBody,
         });
 
-        const apiFilePath = path.join(outputDir, "api.ts");
+        const apiFilePath = path.join(outputDir, 'api.ts');
         fs.writeFileSync(apiFilePath, apiContent);
 
         console.log(chalk.green(`✅ 已生成: ${outputDir}`));
@@ -308,9 +310,9 @@ async function openapiMode(source) {
         console.log(chalk.red(`❌ 生成失败: ${error.message}`));
 
         const resp = await prompts({
-          type: "confirm",
-          name: "continueGen",
-          message: "是否继续生成其他接口？",
+          type: 'confirm',
+          name: 'continueGen',
+          message: '是否继续生成其他接口？',
           initial: true,
         });
 
@@ -319,7 +321,7 @@ async function openapiMode(source) {
       }
     }
 
-    console.log(chalk.green("\n✨ 所有接口处理完成！\n"));
+    console.log(chalk.green('\n✨ 所有接口处理完成！\n'));
   }
 }
 

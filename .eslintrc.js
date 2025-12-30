@@ -4,12 +4,14 @@ module.exports = {
     es2021: true,
     jest: true,
   },
-  extends: "eslint:recommended",
+  extends: ['eslint:recommended', 'plugin:prettier/recommended'],
   parserOptions: {
     ecmaVersion: 12,
+    sourceType: 'module',
   },
   rules: {
-    "no-console": "off",
-    "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    'no-console': 'off',
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'prettier/prettier': 'error',
   },
 };

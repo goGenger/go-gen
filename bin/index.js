@@ -7,11 +7,7 @@ const packageJson = require('../package.json');
 // 导入命令
 const fetchMode = require('../core/fetch-mode');
 const openapiMode = require('../core/openapi-mode');
-const {
-  initLocalConfig,
-  showConfig,
-  configGlobal
-} = require('../core/config');
+const { initLocalConfig, showConfig, configGlobal } = require('../core/config');
 
 // 设置程序信息
 program
@@ -37,7 +33,7 @@ program
 program
   .command('openapi <source>')
   .description('📄 OpenAPI 模式')
-  .action(async (source) => {
+  .action(async source => {
     try {
       console.log(chalk.cyan('🚀 OpenAPI 模式启动\n'));
       await openapiMode(source);
@@ -66,7 +62,7 @@ program
   .description('🔧 配置管理')
   .option('-s, --show', '显示配置')
   .option('-g, --global', '全局配置')
-  .action(async (options) => {
+  .action(async options => {
     try {
       if (options.show) {
         showConfig();
