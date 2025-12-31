@@ -292,7 +292,7 @@ async function fetchMode() {
   const cleanup = setupCancelListener(fetchSpinner);
 
   // 🔥 标记请求是否被用户取消
-  const userCancelled = false;
+  let userCancelled = false;
 
   try {
     const headers = {
