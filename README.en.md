@@ -23,13 +23,13 @@ English | [简体中文](./README.md)
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g go-gen
+npm install -g @gogenger/go-gen
 ```
 
 ### Project Installation
 
 ```bash
-npm install --save-dev go-gen
+npm install --save-dev @gogenger/go-gen
 ```
 
 ## 🎯 Quick Start

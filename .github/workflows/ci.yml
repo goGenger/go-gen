@@ -70,7 +70,7 @@ jobs:
       - name: Test installation
         run: |
           npm pack
-          npm install -g go-gen-*.tgz
+          npm install -g @gogenger/go-gen-*.tgz
           go-gen --version
           go-gen --help
 

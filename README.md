@@ -23,13 +23,13 @@
 ### 全局安装（推荐）
 
 ```bash
-npm install -g go-gen
+npm install -g @gogenger/go-gen
 ```
 
 ### 项目内安装
 
 ```bash
-npm install --save-dev go-gen
+npm install --save-dev @gogenger/go-gen
 ```
 
 ## 🎯 快速开始
