@@ -94,7 +94,7 @@ jobs:
       - name: Pack and test installation
         run: |
           yarn pack
-          PACKAGE=$(ls gogenger/go-gen-*.tgz)
+          PACKAGE=$(ls gogenger-go-gen-*.tgz)
           yarn global add file:$PWD/$PACKAGE
           go-gen --version
           go-gen --help
