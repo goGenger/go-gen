@@ -29,10 +29,6 @@ jobs:
       - name: Run tests
         run: yarn test
 
-      - name: Build
-        run: yarn build
-        continue-on-error: true
-
       - name: Get version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT

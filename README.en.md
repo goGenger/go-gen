@@ -124,16 +124,6 @@ Issues and Pull Requests are welcome!
 
 Check out [Contributing Guide](./CONTRIBUTING.md) to learn how to participate in development.
 
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# View coverage
-npm test -- --coverage
-```
-
 ## 📄 License
 
 [MIT](./LICENSE)

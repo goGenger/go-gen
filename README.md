@@ -124,16 +124,6 @@ go-gen config --global
 
 查看 [贡献指南](./CONTRIBUTING.md) 了解如何参与项目开发。
 
-## 🧪 测试
-
-```bash
-# 运行所有测试
-npm test
-
-# 查看覆盖率
-npm test -- --coverage
-```
-
 ## 📄 License
 
 [MIT](./LICENSE)
