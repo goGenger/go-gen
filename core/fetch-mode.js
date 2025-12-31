@@ -113,7 +113,7 @@ function createAbortError() {
  * 监听用户输入,允许按 Ctrl+C 取消请求
  * 🔥 关键修复: 使用 once + 立即清理机制
  */
-function setupCancelListener(spinner) {
+function setupCancelListener() {
   console.log(chalk.gray('\n💡 提示: 请求过程中可以按 Ctrl+C 取消\n'));
 
   let isHandled = false; // 防止重复处理
@@ -292,7 +292,7 @@ async function fetchMode() {
   const cleanup = setupCancelListener(fetchSpinner);
 
   // 🔥 标记请求是否被用户取消
-  let userCancelled = false;
+  const userCancelled = false;
 
   try {
     const headers = {
