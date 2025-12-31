@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - feature/**
+      - fix/**
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   test:
@@ -18,28 +22,33 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: yarn
+
       - run: yarn install --frozen-lockfile
       - run: yarn test
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage/lcov.info
 
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: yarn
+
       - run: yarn install --frozen-lockfile
       - run: yarn lint
       - run: yarn format:check
@@ -47,14 +56,18 @@ jobs:
   build:
     name: Build and Install Test
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [test, lint]
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: yarn
+
       - run: yarn install --frozen-lockfile
+
       - run: |
           yarn pack
           PACKAGE=$(ls gogenger-go-gen-*.tgz)
@@ -64,8 +77,14 @@ jobs:
   release:
     name: Release to npm
     runs-on: ubuntu-latest
-    needs: [test, lint]
-    if: github.event_name == 'push'
+    needs: [test, lint, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
         with:
