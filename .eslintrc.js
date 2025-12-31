@@ -14,4 +14,5 @@ module.exports = {
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'prettier/prettier': 'error',
   },
+  ignorePatterns: ['node_modules/', 'coverage/', 'dist/', '*.min.js'],
 };
