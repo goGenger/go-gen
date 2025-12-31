@@ -26,13 +26,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Run tests
-        run: npm test
+        run: yarn test
         continue-on-error: false
 
       - name: Upload coverage
@@ -56,31 +56,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
-      - name: Check if lint script exists
-        id: check-lint
-        run: |
-          if npm run lint --if-present 2>/dev/null; then
-            echo "has_lint=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_lint=false" >> $GITHUB_OUTPUT
-            echo "⚠️ No lint script found, skipping lint check"
-          fi
+      - name: Run lint
+        run: yarn lint
         continue-on-error: true
 
-      - name: Check if format script exists
-        id: check-format
-        run: |
-          if npm run format:check --if-present 2>/dev/null; then
-            echo "has_format=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_format=false" >> $GITHUB_OUTPUT
-            echo "⚠️ No format:check script found, skipping format check"
-          fi
+      - name: Run format check
+        run: yarn format:check
         continue-on-error: true
 
   build:
@@ -96,18 +82,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build (if build script exists)
-        run: npm run build --if-present
+        run: yarn build
         continue-on-error: true
 
       - name: Pack and test installation
         run: |
-          npm pack
-          npm install -g @gogenger/go-gen-*.tgz
+          yarn pack
+          PACKAGE=$(ls @gogenger/go-gen-*.tgz)
+          yarn global add file:$PWD/$PACKAGE
           go-gen --version
           go-gen --help
