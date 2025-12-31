@@ -9,7 +9,9 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "lint": "eslint core/**/*.js",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [
     "quicktype",

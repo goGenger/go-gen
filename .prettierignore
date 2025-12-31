@@ -1,6 +1,9 @@
 node_modules/
-dist/
-build/
 *.min.js
 *.config.js
-coverage/
+coverage
+dist
+build
+*.log
+package-lock.json
+yarn.lock
