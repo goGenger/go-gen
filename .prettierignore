@@ -7,3 +7,4 @@ build
 *.log
 package-lock.json
 yarn.lock
+*.md
