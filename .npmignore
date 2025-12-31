@@ -1,10 +1,58 @@
-{
-  "files": [
-    "bin",
-    "core",
-    "utils",
-    "dist",
-    "README.md",
-    "LICENSE"
-  ]
-}
+# 测试相关
+test/
+*.test.js
+*.spec.js
+__tests__/
+coverage/
+
+# 开发工具配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+
+# 源码（如果已编译）
+src/
+# 保留编译后的文件
+# !dist/
+# !lib/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 依赖
+node_modules/
+
+# 日志
+*.log
+logs/
+
+# 临时文件
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# Husky
+.husky/
+
+# 编译缓存
+.cache/
+.temp/
+*.tsbuildinfo
+
+# 其他
+.prettierignore
+.eslintcache
+jest.config.js
+rollup.config.js
+webpack.config.js

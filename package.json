@@ -1,5 +1,5 @@
 {
-  "name": "go-gen",
+  "name": "@gogenger/go-gen",
   "version": "1.0.0",
   "description": "一款 TypeScript API 代码生成器，支持从 API 响应或 OpenAPI 文档一键生成 TypeScript 接口代码和类型定义",
   "bin": {
@@ -29,10 +29,13 @@
     ]
   },
   "files": [
-    "dist",
+    "core",
+    "utils",
     "bin",
+    "docs",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "devDependencies": {
     "eslint": "^8.47.0",
