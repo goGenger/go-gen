@@ -15,7 +15,8 @@
     "prepare": "husky install",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "release": "semantic-release"
+    "release": "semantic-release",
+    "fix": "eslint --fix ."
   },
   "keywords": [
     "quicktype",

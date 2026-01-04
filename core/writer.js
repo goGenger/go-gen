@@ -224,17 +224,22 @@ function mergeTypesContent(existingContent, newTypesContent, typeName) {
   });
 
   if (uniqueDefinitions.length === 0) {
-    return { merged: existingContent, isDuplicate: true, finalTypeName, renamedTypes: [] };
+    return {
+      merged: existingContent,
+      isDuplicate: true,
+      finalTypeName,
+      renamedTypes: [],
+    };
   }
 
   // 确保有换行分隔
   const merged =
     existingContent.trim() + '\n\n' + uniqueDefinitions.join('\n\n');
 
-  return { 
-    merged, 
-    isDuplicate: false, 
-    finalTypeName, 
+  return {
+    merged,
+    isDuplicate: false,
+    finalTypeName,
     hasConflict,
     renamedTypes: newTypeNames, // 返回所有重命名后的类型名
   };
@@ -409,9 +414,7 @@ async function writeFiles({
 
     if (hasConflict && interactive) {
       console.log(
-        chalk.yellow(
-          `\n⚠️  检测到类型名冲突，已自动重命名所有相关类型:`,
-        ),
+        chalk.yellow(`\n⚠️  检测到类型名冲突，已自动重命名所有相关类型:`),
       );
       console.log(chalk.gray(`   ${typeName} → ${resolvedName}`));
       if (types && types.length > 0) {
@@ -467,7 +470,9 @@ async function writeFiles({
     if (typeSkipped && apiSkipped) {
       spinner.warn('⚠️  内容已存在，无新增内容');
     } else if (typeConflict) {
-      spinner.succeed(`✨ 生成成功！（类型已重命名为 ${finalTypeName}，包含所有嵌套类型）`);
+      spinner.succeed(
+        `✨ 生成成功！（类型已重命名为 ${finalTypeName}，包含所有嵌套类型）`,
+      );
     } else if (dirExists) {
       spinner.succeed('✨ 增量写入成功！');
     } else {
