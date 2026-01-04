@@ -7,8 +7,6 @@ function pascalCase(name) {
   if (isValidIdentifier(name)) {
     return name;
   }
-
-  // 否则才进行 pascalCase
   return name
     .replace(/[-_/](.)/g, (_, c) => c.toUpperCase())
     .replace(/^(.)/, (_, c) => c.toUpperCase());
