@@ -97,6 +97,13 @@ jobs:
 
       - run: yarn install --frozen-lockfile
 
+      - name: Debug npm auth
+        run: |
+          npm whoami || true
+          npm config get registry
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Release
         run: yarn release
         env:
