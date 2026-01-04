@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/goGenger/go-gen/compare/v1.0.1...v1.0.2) (2026-01-04)
+
+
+### Bug Fixes
+
+* 修改发布工作流以响应标签推送而非分支推送 ([6f22ed1](https://github.com/goGenger/go-gen/commit/6f22ed14d07451636261b84134bdc166a6f395e8))
+
 ## [1.0.1](https://github.com/goGenger/go-gen/compare/v1.0.0...v1.0.1) (2026-01-04)
 
 
