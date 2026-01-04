@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/goGenger/go-gen/compare/v1.0.2...v1.0.3) (2026-01-04)
+
+
+### Bug Fixes
+
+* **writer:** 修复类型冲突时嵌套类型重命名问题 ([f27a077](https://github.com/goGenger/go-gen/commit/f27a077dd0f9be72e9ce98dc904925da1c244054))
+
 ## [1.0.2](https://github.com/goGenger/go-gen/compare/v1.0.1...v1.0.2) (2026-01-04)
 
 
