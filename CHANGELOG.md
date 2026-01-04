@@ -1,3 +1,19 @@
+# 1.0.0 (2026-01-04)
+
+
+### Bug Fixes
+
+* **ci:** 修正工作流中包名称的路径错误 ([5f3af29](https://github.com/goGenger/go-gen/commit/5f3af29fe9ae0208a4ef941fd2ed8c2eeb1a6b12))
+* **fetch-mode:** 修复请求取消逻辑和竞态条件问题 ([7d52d83](https://github.com/goGenger/go-gen/commit/7d52d830a40fb431d60ac0fd331071dc187afc6e))
+* **fetch-mode:** 移除未使用的spinner参数并修复userCancelled变量声明 ([6e5c519](https://github.com/goGenger/go-gen/commit/6e5c519a6d965f8eee50d5850547b4ca37f29ce9))
+* 将userCancelled改为可变量以标记请求取消状态 ([15de5a4](https://github.com/goGenger/go-gen/commit/15de5a45ae9aa8d3606ce9a4a2f47469c20cf975))
+
+
+### Features
+
+* **ci:** 添加 GitHub issue 模板和 release 工作流 ([43a2655](https://github.com/goGenger/go-gen/commit/43a265589d066f29a526f7c6d005a137c611d121))
+* 重构核心模块并更新项目元数据 ([4f8bb3e](https://github.com/goGenger/go-gen/commit/4f8bb3e0148a664e5fdc3cc22da53426e201f5b3))
+
 # 更新日志 / Changelog
 
 本文档记录项目的所有重要变更。
