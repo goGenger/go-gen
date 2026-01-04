@@ -118,18 +118,72 @@ function extractTypeDefinitions(newTypesContent) {
   return definitions;
 }
 
-function resolveTypeNameConflict(existingTypes, typeName) {
-  let finalTypeName = typeName;
-  let suffix = 1;
+/**
+ * 🔥 新增：重命名类型内容中的所有相关类型
+ * 当顶层类型重命名时，所有嵌套类型也要重命名
+ */
+function renameAllRelatedTypes(typesContent, originalTypeName, suffix) {
+  if (!suffix) return typesContent;
 
-  while (existingTypes.includes(finalTypeName)) {
-    finalTypeName = `${typeName}${suffix}`;
-    suffix++;
+  // 提取所有类型名
+  const typeNamePattern = /export\s+(?:interface|type)\s+(\w+)/g;
+  const typeNames = [];
+  let match;
+
+  while ((match = typeNamePattern.exec(typesContent)) !== null) {
+    typeNames.push(match[1]);
   }
 
-  return { finalTypeName, hasConflict: finalTypeName !== typeName };
+  // 按长度降序排序，避免部分匹配问题
+  // 例如：先替换 UserData，再替换 Data
+  typeNames.sort((a, b) => b.length - a.length);
+
+  let renamedContent = typesContent;
+
+  // 对每个类型名都添加后缀
+  typeNames.forEach(typeName => {
+    const newTypeName = `${typeName}${suffix}`;
+
+    // 1. 替换类型定义 (export interface/type)
+    renamedContent = renamedContent.replace(
+      new RegExp(`(export\\s+(?:interface|type)\\s+)${typeName}\\b`, 'g'),
+      `$1${newTypeName}`,
+    );
+
+    // 2. 替换类型引用（避免重复替换已经加了后缀的）
+    // 使用负向前瞻，确保不会把 Data1 替换成 Data11
+    renamedContent = renamedContent.replace(
+      new RegExp(`\\b${typeName}\\b(?!${suffix})`, 'g'),
+      newTypeName,
+    );
+  });
+
+  return renamedContent;
 }
 
+function resolveTypeNameConflict(existingTypes, typeName) {
+  let finalTypeName = typeName;
+  let suffix = 0;
+
+  if (!existingTypes.includes(typeName)) {
+    return { finalTypeName, hasConflict: false, suffix: 0 };
+  }
+
+  // 找到不冲突的名称
+  suffix = 1;
+  finalTypeName = `${typeName}${suffix}`;
+
+  while (existingTypes.includes(finalTypeName)) {
+    suffix++;
+    finalTypeName = `${typeName}${suffix}`;
+  }
+
+  return { finalTypeName, hasConflict: true, suffix };
+}
+
+/**
+ * 🔥 修复：合并类型内容时，重命名所有相关类型
+ */
 function mergeTypesContent(existingContent, newTypesContent, typeName) {
   const typeRegex = /export\s+(?:interface|type)\s+(\w+)/g;
   const existingTypes = [];
@@ -139,20 +193,30 @@ function mergeTypesContent(existingContent, newTypesContent, typeName) {
     existingTypes.push(match[1]);
   }
 
-  const { finalTypeName, hasConflict } = resolveTypeNameConflict(
+  const { finalTypeName, hasConflict, suffix } = resolveTypeNameConflict(
     existingTypes,
     typeName,
   );
 
+  let processedContent = newTypesContent;
+
+  // 🔥 如果有冲突，重命名所有相关类型
   if (hasConflict) {
-    newTypesContent = newTypesContent.replace(
-      new RegExp(`\\b${typeName}\\b`, 'g'),
-      finalTypeName,
-    );
+    processedContent = renameAllRelatedTypes(newTypesContent, typeName, suffix);
   }
 
-  const newDefinitions = extractTypeDefinitions(newTypesContent);
+  const newDefinitions = extractTypeDefinitions(processedContent);
 
+  // 提取新内容中的类型名（已重命名后的）
+  const newTypeNames = [];
+  newDefinitions.forEach(def => {
+    const typeMatch = def.match(/export\s+(?:interface|type)\s+(\w+)/);
+    if (typeMatch) {
+      newTypeNames.push(typeMatch[1]);
+    }
+  });
+
+  // 过滤掉已存在的类型
   const uniqueDefinitions = newDefinitions.filter(def => {
     const typeMatch = def.match(/export\s+(?:interface|type)\s+(\w+)/);
     if (!typeMatch) return false;
@@ -160,14 +224,20 @@ function mergeTypesContent(existingContent, newTypesContent, typeName) {
   });
 
   if (uniqueDefinitions.length === 0) {
-    return { merged: existingContent, isDuplicate: true, finalTypeName };
+    return { merged: existingContent, isDuplicate: true, finalTypeName, renamedTypes: [] };
   }
 
   // 确保有换行分隔
   const merged =
     existingContent.trim() + '\n\n' + uniqueDefinitions.join('\n\n');
 
-  return { merged, isDuplicate: false, finalTypeName, hasConflict };
+  return { 
+    merged, 
+    isDuplicate: false, 
+    finalTypeName, 
+    hasConflict,
+    renamedTypes: newTypeNames, // 返回所有重命名后的类型名
+  };
 }
 
 function extractImportedTypes(apiContent) {
@@ -325,6 +395,7 @@ async function writeFiles({
   let finalTypeName = typeName;
   let typeSkipped = false;
   let typeConflict = false;
+  let renamedTypes = [];
 
   if (fs.existsSync(typesFilePath)) {
     const existingTypes = fs.readFileSync(typesFilePath, 'utf-8');
@@ -333,16 +404,22 @@ async function writeFiles({
       isDuplicate,
       finalTypeName: resolvedName,
       hasConflict,
+      renamedTypes: types,
     } = mergeTypesContent(existingTypes, typesContent, typeName);
 
     if (hasConflict && interactive) {
       console.log(
         chalk.yellow(
-          `⚠️  类型名冲突，已自动重命名: ${typeName} → ${resolvedName}`,
+          `\n⚠️  检测到类型名冲突，已自动重命名所有相关类型:`,
         ),
       );
+      console.log(chalk.gray(`   ${typeName} → ${resolvedName}`));
+      if (types && types.length > 0) {
+        console.log(chalk.gray(`   包含类型: ${types.join(', ')}`));
+      }
       typeConflict = true;
       finalTypeName = resolvedName;
+      renamedTypes = types;
     }
 
     if (isDuplicate && !hasConflict && interactive) {
@@ -390,7 +467,7 @@ async function writeFiles({
     if (typeSkipped && apiSkipped) {
       spinner.warn('⚠️  内容已存在，无新增内容');
     } else if (typeConflict) {
-      spinner.succeed(`✨ 生成成功！（类型已重命名为 ${finalTypeName}）`);
+      spinner.succeed(`✨ 生成成功！（类型已重命名为 ${finalTypeName}，包含所有嵌套类型）`);
     } else if (dirExists) {
       spinner.succeed('✨ 增量写入成功！');
     } else {
@@ -398,7 +475,7 @@ async function writeFiles({
     }
   }
 
-  return { success: true, outputDir, finalTypeName };
+  return { success: true, outputDir, finalTypeName, renamedTypes };
 }
 
 module.exports = {
@@ -410,4 +487,5 @@ module.exports = {
   mergeApiContent,
   resolveTypeNameConflict,
   validatePath,
+  renameAllRelatedTypes, // 🔥 导出供测试使用
 };

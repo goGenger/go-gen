@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const ora = require('ora');
 const chalk = require('chalk');
 const { generateTypes } = require('./quicktype');
-const { writeFiles } = require('./writer');
+const { writeFiles } = require('./writer'); // 🔥 使用修复后的 writer
 const { loadConfig } = require('./config');
 
 // 全局取消控制器
@@ -124,7 +124,6 @@ function setupCancelListener() {
 
     if (globalAbortController && !globalAbortController.signal.aborted) {
       isHandled = true;
-      // spinner.fail(chalk.yellow("⚠️  用户取消了请求"));
       globalAbortController.abort();
 
       // 🔥 关键: 立即移除监听器，避免影响后续 prompts
@@ -291,9 +290,6 @@ async function fetchMode() {
   // 🆕 设置取消监听器
   const cleanup = setupCancelListener(fetchSpinner);
 
-  // 🔥 标记请求是否被用户取消
-  let userCancelled = false;
-
   try {
     const headers = {
       'Content-Type': 'application/json',
@@ -362,7 +358,6 @@ async function fetchMode() {
 
     // 区分用户取消和真实错误
     if (error.message === '用户取消了请求' || error.name === 'AbortError') {
-      userCancelled = true;
       fetchSpinner.fail(chalk.yellow('⚠️  请求已被取消'));
       console.log(chalk.gray('\n提示: 您可以重新开始或退出\n'));
 
