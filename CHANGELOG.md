@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/goGenger/go-gen/compare/v1.0.0...v1.0.1) (2026-01-04)
+
+
+### Bug Fixes
+
+* **utils:** 移除pascalCase函数中的冗余注释 ([c5813ff](https://github.com/goGenger/go-gen/commit/c5813ff97ff844f0a0ce2631be0020a037a18c02))
+
 # 1.0.0 (2026-01-04)
 
 
