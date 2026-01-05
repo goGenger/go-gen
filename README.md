@@ -1,8 +1,9 @@
 # 🚀 go-gen
 
-[![npm version](https://badge.fury.io/js/go-gen.svg)](https://www.npmjs.com/package/go-gen)
+[![npm](https://img.shields.io/npm/v/@gogenger/go-gen)](https://www.npmjs.com/package/@gogenger/go-gen)
+[![Downloads](https://img.shields.io/npm/dm/@gogenger/go-gen)](https://www.npmjs.com/package/@gogenger/go-gen)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/go-gen.svg)](https://nodejs.org)
+[![Node.js Version](https://img.shields.io/node/v/@gogenger/go-gen)](https://nodejs.org)
 
 一款 TypeScript API 代码生成器，支持从 API 响应或 OpenAPI 文档一键生成 TypeScript 接口代码和类型定义。
 
