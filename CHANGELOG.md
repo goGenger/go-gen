@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/goGenger/go-gen/compare/v1.0.3...v1.1.0) (2026-01-09)
+
+
+### Bug Fixes
+
+* 修复 package.json 文件末尾缺少换行符的问题 ([5886bc6](https://github.com/goGenger/go-gen/commit/5886bc68e2086c2967adb864ed867ff60938018d))
+
+
+### Features
+
+* **writer:** 新增类型前缀功能并优化类型冲突处理 ([f09f029](https://github.com/goGenger/go-gen/commit/f09f0292f6dd5b58626927e996ed21696067ddd3))
+
 ## [1.0.3](https://github.com/goGenger/go-gen/compare/v1.0.2...v1.0.3) (2026-01-04)
 
 
