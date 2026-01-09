@@ -1,6 +1,6 @@
 {
   "name": "@gogenger/go-gen",
-  "version": "0.0.0-development",
+  "version": "1.0.3",
   "description": "一款 TypeScript API 代码生成器，支持从 API 响应或 OpenAPI 文档一键生成 TypeScript 接口代码和类型定义",
   "bin": {
     "go-gen": "./bin/index.js"
@@ -15,7 +15,8 @@
     "prepare": "husky install",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "release": "semantic-release"
+    "release": "semantic-release",
+    "fix": "eslint --fix ."
   },
   "keywords": [
     "quicktype",

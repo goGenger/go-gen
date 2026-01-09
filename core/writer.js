@@ -213,6 +213,9 @@ function resolveTypeNameConflict(existingTypes, typeName) {
   return { finalTypeName, hasConflict: true, suffix };
 }
 
+/**
+ * 🔥 修复：合并类型内容时，重命名所有相关类型
+ */
 function mergeTypesContent(existingContent, newTypesContent, typeName) {
   const typeRegex = /export\s+(?:interface|type)\s+(\w+)/g;
   const existingTypes = [];
@@ -243,6 +246,16 @@ function mergeTypesContent(existingContent, newTypesContent, typeName) {
     }
   });
 
+  // 提取新内容中的类型名（已重命名后的）
+  const newTypeNames = [];
+  newDefinitions.forEach(def => {
+    const typeMatch = def.match(/export\s+(?:interface|type)\s+(\w+)/);
+    if (typeMatch) {
+      newTypeNames.push(typeMatch[1]);
+    }
+  });
+
+  // 过滤掉已存在的类型
   const uniqueDefinitions = newDefinitions.filter(def => {
     const typeMatch = def.match(/export\s+(?:interface|type)\s+(\w+)/);
     if (!typeMatch) return false;
